@@ -1,10 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useMutation } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
-import { useAuth } from '@/lib/providers/auth-provider'
+import { createFlow } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,49 +13,30 @@ import Link from 'next/link'
 export default function NewFlowPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const { orgId, user } = useAuth()
-  const router = useRouter()
-  const supabase = createClient()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const createFlowMutation = useMutation({
-    mutationFn: async () => {
-      if (!orgId || !user) throw new Error('User not authenticated')
-
-      const { data, error } = await supabase
-        .from('onboard_flows')
-        .insert({
-          org_id: orgId,
-          name,
-          description: description || null,
-          flow_data: {
-            nodes: [
-              {
-                id: 'start',
-                type: 'start',
-                position: { x: 250, y: 50 },
-                data: { label: 'Start' }
-              }
-            ],
-            edges: []
-          },
-          is_active: false,
-          created_by: user.id,
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-      return data
-    },
-    onSuccess: (flow) => {
-      router.push(`/dashboard/flows/${flow.id}/edit`)
-    },
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (name.trim()) {
-      createFlowMutation.mutate()
+    if (!name.trim()) return
+
+    setLoading(true)
+    setError(null)
+
+    const formData = new FormData()
+    formData.append('name', name.trim())
+    formData.append('description', description)
+
+    try {
+      const result = await createFlow(formData)
+      if (result?.error) {
+        setError(result.error)
+      }
+      // Success case is handled by redirect in the server action
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -114,11 +92,11 @@ export default function NewFlowPage() {
               <div className="flex gap-3 pt-4">
                 <Button 
                   type="submit" 
-                  disabled={!name.trim() || createFlowMutation.isPending}
+                  disabled={!name.trim() || loading}
                   className="gap-2"
                 >
                   <Save className="w-4 h-4" />
-                  {createFlowMutation.isPending ? 'Creating...' : 'Create Flow'}
+                  {loading ? 'Creating...' : 'Create Flow'}
                 </Button>
                 <Button variant="outline" asChild>
                   <Link href="/dashboard/flows">
@@ -127,12 +105,9 @@ export default function NewFlowPage() {
                 </Button>
               </div>
 
-              {createFlowMutation.error && (
+              {error && (
                 <p className="text-sm text-red-600">
-                  {createFlowMutation.error instanceof Error 
-                    ? createFlowMutation.error.message 
-                    : 'Failed to create flow'
-                  }
+                  {error}
                 </p>
               )}
             </form>

@@ -81,7 +81,7 @@ export default function OnboardPage() {
 
         if (existingUser) {
           console.log('[Onboard] User already onboarded. Redirecting to /dashboard');
-          router.push('/dashboard');
+          router.replace('/dashboard');
           return;
         }
 
@@ -144,7 +144,7 @@ export default function OnboardPage() {
       }
 
       // Success! Redirect to dashboard
-      router.push('/dashboard')
+      router.replace('/dashboard')
       
     } catch (error) {
       console.error('Onboarding error:', error)

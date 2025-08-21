@@ -19,7 +19,7 @@ export async function updatePassword(formData: FormData) {
     return { error: 'Password must be at least 6 characters long' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.auth.updateUser({ password })
 
   if (error) {
