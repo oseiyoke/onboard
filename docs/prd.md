@@ -240,9 +240,10 @@ Create a flexible, intuitive onboarding platform that transforms how organizatio
 
 **Authentication (Supabase Auth):**
 - JWT-based sessions
+- Email/password authentication
 - SSO support (SAML 2.0, OAuth 2.0)
-- Magic links
-- Multi-factor authentication
+- Password reset functionality
+- Multi-factor authentication (optional)
 - Role-based access control (RBAC)
 
 ### 4.4 Performance Requirements
@@ -297,8 +298,9 @@ Create a flexible, intuitive onboarding platform that transforms how organizatio
 ### 5.2 Participant: Completing Onboarding
 
 1. **Receive Invitation**
-   - Resend email with magic link
-   - Supabase Auth login/signup
+   - Resend email with login instructions
+   - Supabase Auth email/password signup
+   - Account verification (if email confirmation enabled)
    - Personalized welcome screen
 
 2. **Start Onboarding**
@@ -421,7 +423,8 @@ CREATE POLICY "Users can view their org data" ON onboard_flows
 2. **Authentication System**
    - Implement Supabase Auth
    - Create login/signup pages
-   - Magic link authentication
+   - Email/password authentication
+   - Password reset functionality
    - Protected routes with middleware
    - Role-based access (admin/participant)
 
