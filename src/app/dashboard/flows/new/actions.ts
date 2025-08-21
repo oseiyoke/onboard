@@ -34,41 +34,41 @@ export async function createFlow(formData: FormData) {
     return { error: 'Flow name is required' }
   }
 
-  try {
-    const flowId = randomUUID()
-    const { data, error } = await supabase
-      .from('onboard_flows')
-      .insert({
-        id: flowId,
-        org_id: onboardUser.org_id,
-        name: name.trim(),
-        description,
-        flow_data: {
-          nodes: [
-            {
-              id: 'start',
-              type: 'start',
-              position: { x: 250, y: 50 },
-              data: { label: 'Start' }
-            }
-          ],
-          edges: []
-        },
-        is_active: false,
-        created_by: user.id,
-      })
-      .select()
-      .single()
+  const flowId = randomUUID()
+  const { data, error } = await supabase
+    .from('onboard_flows')
+    .insert({
+      id: flowId,
+      org_id: onboardUser.org_id,
+      name: name.trim(),
+      description,
+      flow_data: {
+        nodes: [
+          {
+            id: 'start',
+            type: 'start',
+            position: { x: 250, y: 50 },
+            data: { label: 'Start' }
+          }
+        ],
+        edges: []
+      },
+      is_active: false,
+      created_by: user.id,
+    })
+    .select()
+    .single()
 
-    if (error) {
-      console.error('Flow creation error:', error)
-      return { error: 'Failed to create flow' }
-    }
+    console.log("data", data)
+    console.log("error", error)
 
-    // Redirect to the flow editor
-    redirect(`/dashboard/flows/${data.id}/edit`)
-  } catch (error) {
+  if (error) {
     console.error('Flow creation error:', error)
-    return { error: 'An error occurred while creating the flow' }
+    return { error: 'Failed to create flow' }
   }
+
+  // Redirect to the flow editor – this will throw a NEXT_REDIRECT error
+  // that Next.js App Router will handle internally. By keeping it outside
+  // of a try/catch block we avoid logging it as an application error.
+  redirect(`/dashboard/flows/${data.id}/edit`)
 }
