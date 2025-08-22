@@ -1,10 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
-import { useAuth } from '@/lib/providers/auth-provider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -19,7 +17,10 @@ import {
   Download,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Youtube,
+  ExternalLink,
+  Globe
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -33,16 +34,29 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 
 interface ContentItem {
   id: string
+  org_id: string
   name: string
-  type: 'pdf' | 'video' | 'document' | 'image'
-  file_url: string
-  file_size: number
+  type: 'pdf' | 'video' | 'document' | 'image' | 'other'
+  source: 'upload' | 'youtube' | 'gdrive' | 'external'
+  file_url?: string
+  external_url?: string
+  file_size?: number
+  thumbnail_url?: string
+  duration?: number
+  version: number
+  view_count: number
   metadata: Record<string, unknown>
   created_at: string
   created_by: string
 }
 
-const getFileIcon = (type: string) => {
+const getFileIcon = (type: string | undefined, source?: string) => {
+  if (source === 'youtube') return Youtube
+  if (source === 'gdrive') return FileText
+  if (source === 'external') return Globe
+  
+  if (!type) return File
+  
   switch (type) {
     case 'image': return Image
     case 'video': return Video
@@ -52,13 +66,27 @@ const getFileIcon = (type: string) => {
   }
 }
 
-const getFileTypeColor = (type: string) => {
+const getFileTypeColor = (type: string, source?: string) => {
+  if (source === 'youtube') return 'bg-red-100 text-red-800'
+  if (source === 'gdrive') return 'bg-blue-100 text-blue-800'
+  if (source === 'external') return 'bg-gray-100 text-gray-800'
+  
   switch (type) {
     case 'image': return 'bg-green-100 text-green-800'
     case 'video': return 'bg-blue-100 text-blue-800'
     case 'pdf': return 'bg-red-100 text-red-800'
     case 'document': return 'bg-purple-100 text-purple-800'
     default: return 'bg-gray-100 text-gray-800'
+  }
+}
+
+const getSourceLabel = (source: string) => {
+  switch (source) {
+    case 'youtube': return 'YouTube'
+    case 'gdrive': return 'Google Drive'
+    case 'external': return 'External'
+    case 'upload': return 'Upload'
+    default: return 'Unknown'
   }
 }
 
@@ -81,44 +109,54 @@ const formatDate = (dateString: string) => {
 export function ContentLibrary() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<string>('all')
-  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
-  const supabase = createClient()
+  const [selectedSource, setSelectedSource] = useState<string>('all')
   const queryClient = useQueryClient()
 
-  // Fetch content from Supabase
-  const { data: content = [], isLoading } = useQuery({
-    queryKey: ['content'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('onboard_content')
-        .select('*')
-        .order('created_at', { ascending: false })
+  // Build query parameters
+  const queryParams = new URLSearchParams({
+    page: '1',
+    limit: '50',
+    ...(searchTerm && { search: searchTerm }),
+    ...(selectedType !== 'all' && { type: selectedType }),
+    ...(selectedSource !== 'all' && { source: selectedSource }),
+  })
 
-      if (error) throw error
-      return data as ContentItem[]
+  // Fetch content from API
+  const { data: response, isLoading } = useQuery({
+    queryKey: ['content', searchTerm, selectedType, selectedSource],
+    queryFn: async () => {
+      const response = await fetch(`/api/content?${queryParams}`, {
+        credentials: 'include',
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch content')
+      }
+
+      return response.json()
     },
   })
+
+  // The API returns `{ data: ContentItem[], pagination: {...} }`
+  // so we need to access the `data` property rather than `content`.
+  const content = (response?.data as ContentItem[]) || []
 
   // Delete content mutation
   const deleteContentMutation = useMutation({
     mutationFn: async (contentId: string) => {
-      const { error } = await supabase
-        .from('onboard_content')
-        .delete()
-        .eq('id', contentId)
+      const response = await fetch(`/api/content/${contentId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error('Failed to delete content')
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['content'] })
     },
-  })
-
-  // Filter content based on search and type
-  const filteredContent = content.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = selectedType === 'all' || item.type === selectedType
-    return matchesSearch && matchesType
   })
 
   const contentTypes = [
@@ -127,6 +165,15 @@ export function ContentLibrary() {
     { value: 'image', label: 'Images' },
     { value: 'video', label: 'Videos' },
     { value: 'document', label: 'Documents' },
+    { value: 'other', label: 'Other' },
+  ]
+
+  const contentSources = [
+    { value: 'all', label: 'All Sources' },
+    { value: 'upload', label: 'Uploads' },
+    { value: 'youtube', label: 'YouTube' },
+    { value: 'gdrive', label: 'Google Drive' },
+    { value: 'external', label: 'External Links' },
   ]
 
   if (isLoading) {
@@ -146,8 +193,8 @@ export function ContentLibrary() {
       {/* Search and Filter Bar */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex gap-4 items-center">
-            <div className="relative flex-1">
+          <div className="flex gap-4 items-center flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search content..."
@@ -174,18 +221,36 @@ export function ContentLibrary() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="w-4 h-4" />
+                  {contentSources.find(s => s.value === selectedSource)?.label}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {contentSources.map(source => (
+                  <DropdownMenuItem
+                    key={source.value}
+                    onClick={() => setSelectedSource(source.value)}
+                  >
+                    {source.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardContent>
       </Card>
 
       {/* Content Grid */}
-      {filteredContent.length === 0 ? (
+      {content.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <File className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No content found</h3>
             <p className="text-muted-foreground mb-4">
-              {searchTerm || selectedType !== 'all' 
+              {searchTerm || selectedType !== 'all' || selectedSource !== 'all'
                 ? 'Try adjusting your search or filter criteria'
                 : 'Upload your first piece of content to get started'
               }
@@ -194,19 +259,28 @@ export function ContentLibrary() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredContent.map((item) => {
-            const FileIcon = getFileIcon(item.type)
+          {content.map((item) => {
+            const FileIcon = getFileIcon(item.type, item.source)
+            const contentUrl = item.source === 'upload' ? item.file_url : item.external_url
             
             return (
               <Card key={item.id} className="group hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                        <FileIcon className="w-4 h-4" />
-                      </div>
+                      {item.thumbnail_url ? (
+                        <img
+                          src={item.thumbnail_url}
+                          alt={item.name}
+                          className="w-8 h-8 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                          <FileIcon className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm font-medium truncate">
+                        <CardTitle className="text-sm font-medium">
                           {item.name}
                         </CardTitle>
                       </div>
@@ -226,17 +300,28 @@ export function ContentLibrary() {
                               Preview
                             </DropdownMenuItem>
                           </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh]">
+                          <DialogContent className="sm:max-w-4xl max-h-[90vh]">
                             <ContentViewer content={item} />
                           </DialogContent>
                         </Dialog>
                         
-                        <DropdownMenuItem asChild>
-                          <a href={item.file_url} download target="_blank" rel="noopener noreferrer">
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
-                          </a>
-                        </DropdownMenuItem>
+                        {contentUrl && (
+                          <DropdownMenuItem asChild>
+                            <a href={contentUrl} download target="_blank" rel="noopener noreferrer">
+                              {item.source === 'upload' ? (
+                                <>
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download
+                                </>
+                              ) : (
+                                <>
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Open Link
+                                </>
+                              )}
+                            </a>
+                          </DropdownMenuItem>
+                        )}
                         
                         <DropdownMenuItem>
                           <Edit className="w-4 h-4 mr-2" />
@@ -260,18 +345,28 @@ export function ContentLibrary() {
                 
                 <CardContent className="pt-0">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className={getFileTypeColor(item.type)}>
-                        {item.type.toUpperCase()}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="secondary" className={getFileTypeColor(item.type, item.source)}>
+                        {item.source === 'upload' ? item.type.toUpperCase() : getSourceLabel(item.source)}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatFileSize(item.file_size)}
-                      </span>
+                      {item.file_size && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatFileSize(item.file_size)}
+                        </span>
+                      )}
+                      {item.duration && (
+                        <span className="text-xs text-muted-foreground">
+                          {Math.floor(item.duration / 60)}:{(item.duration % 60).toString().padStart(2, '0')}
+                        </span>
+                      )}
                     </div>
                     
-                    <p className="text-xs text-muted-foreground">
-                      Added {formatDate(item.created_at)}
-                    </p>
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>Added {formatDate(item.created_at)}</span>
+                      {item.view_count > 0 && (
+                        <span>{item.view_count} views</span>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

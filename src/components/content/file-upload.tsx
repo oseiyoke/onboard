@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -40,7 +41,8 @@ interface UploadedFile {
   url: string
 }
 
-const getFileIcon = (type: string) => {
+const getFileIcon = (type: string | undefined) => {
+  if (!type) return File
   if (type.startsWith('image/')) return Image
   if (type.startsWith('video/')) return Video
   if (type.includes('pdf') || type.includes('document') || type.includes('text')) return FileText
@@ -70,6 +72,7 @@ export function FileUpload({
 }: FileUploadProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [uploading, setUploading] = useState(false)
+  const queryClient = useQueryClient()
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map(file => {
@@ -102,37 +105,22 @@ export function FileUpload({
         i === index ? { ...f, uploadStatus: 'uploading', uploadProgress: 0 } : f
       ))
 
-      // Get upload URL from API
-      const response = await fetch('/api/upload', {
+      // Send file to our server which will stream it to R2 (avoids CORS)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          size: file.size,
-        }),
+        body: formData,
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to get upload URL')
+        const error = await response.json().catch(() => null)
+        throw new Error(error?.error || 'Failed to upload file')
       }
 
-      const { uploadUrl, fileKey, publicUrl } = await response.json()
-
-      // Upload file to R2
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      })
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file')
-      }
+      const { fileKey, publicUrl } = await response.json()
 
       // Update file status to success
       setFiles(prev => prev.map((f, i) => 
@@ -155,7 +143,7 @@ export function FileUpload({
         name: file.name,
         size: file.size,
         type: file.type,
-        url: publicUrl
+        url: publicUrl,
       }
 
     } catch (error) {
@@ -188,14 +176,47 @@ export function FileUpload({
         )
         .map(result => result.value)
 
-      if (successfulUploads.length > 0 && onUploadComplete) {
-        onUploadComplete(successfulUploads)
+      // Register each successful upload with our content API
+      if (successfulUploads.length > 0) {
+        for (const upload of successfulUploads) {
+          try {
+            await fetch('/api/content', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                name: upload.name,
+                type: getContentType(upload.type),
+                source: 'upload',
+                file_url: upload.url,
+                file_size: upload.size,
+                metadata: {},
+              }),
+            })
+          } catch (error) {
+            console.error('Failed to register upload with API:', error)
+          }
+        }
+
+        if (onUploadComplete) {
+          onUploadComplete(successfulUploads)
+        }
+        // Invalidate content queries so the library refreshes
+        queryClient.invalidateQueries({ queryKey: ['content'] })
       }
     } catch (error) {
       console.error('Batch upload error:', error)
     } finally {
       setUploading(false)
     }
+  }
+
+  const getContentType = (mimeType: string): 'pdf' | 'video' | 'image' | 'document' | 'other' => {
+    if (mimeType.startsWith('image/')) return 'image'
+    if (mimeType.startsWith('video/')) return 'video'
+    if (mimeType.includes('pdf')) return 'pdf'
+    if (mimeType.includes('document') || mimeType.includes('text') || mimeType.includes('word')) return 'document'
+    return 'other'
   }
 
   const pendingFiles = files.filter(f => f.uploadStatus === 'pending')

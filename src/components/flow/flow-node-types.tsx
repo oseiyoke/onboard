@@ -112,9 +112,22 @@ export function AssessmentNode({ data, selected }: NodeProps) {
               {data.description}
             </p>
           )}
-          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-            <Brain className="w-3 h-3" />
-            <span>0 questions</span>
+          <div className="mt-2 space-y-1">
+            {data.assessmentId ? (
+              <>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Brain className="w-3 h-3" />
+                  <span>{data.questionCount || 0} questions</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span>Pass: {data.passingScore || 70}%</span>
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-orange-600">
+                No assessment selected
+              </div>
+            )}
           </div>
         </CardContent>
       </BaseNode>

@@ -149,3 +149,39 @@ export function createPaginatedResponse<T>(
     options
   )
 }
+
+/**
+ * Creates a standardized error response
+ */
+export function createErrorResponse(
+  message: string,
+  options: {
+    status?: number
+    code?: string
+    headers?: Record<string, string>
+  } = {}
+) {
+  const { status = 400, code, headers = {} } = options
+  
+  return NextResponse.json(
+    {
+      error: message,
+      code,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      status,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+    }
+  )
+}
+
+/**
+ * Creates a standardized not found response
+ */
+export function createNotFoundResponse(message: string = 'Resource not found') {
+  return createErrorResponse(message, { status: 404, code: 'NOT_FOUND' })
+}

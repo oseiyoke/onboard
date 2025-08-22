@@ -32,7 +32,7 @@ const adminNavItems = [
     icon: Upload,
   },
   {
-    name: 'AI Assessments',
+    name: 'Assessments',
     href: '/dashboard/assessments',
     icon: Brain,
   },

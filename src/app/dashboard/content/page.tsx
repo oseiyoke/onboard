@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { FileUpload } from '@/components/content/file-upload'
 import { ContentLibrary } from '@/components/content/content-library'
-import { Plus, Upload, Library } from 'lucide-react'
+import { LinkUpload } from '@/components/content/link-upload'
+import { Plus, Upload, Library, Link } from 'lucide-react'
 import {
   Tabs,
   TabsContent,
@@ -36,7 +37,11 @@ export default function ContentPage() {
           </TabsTrigger>
           <TabsTrigger value="upload" className="gap-2">
             <Upload className="w-4 h-4" />
-            Upload
+            Upload Files
+          </TabsTrigger>
+          <TabsTrigger value="links" className="gap-2">
+            <Link className="w-4 h-4" />
+            Add Links
           </TabsTrigger>
         </TabsList>
 
@@ -49,10 +54,10 @@ export default function ContentPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="w-5 h-5" />
-                Upload Content
+                Upload Files
               </CardTitle>
               <CardDescription>
-                Add new files to your content library. Supported formats include PDFs, videos, images, and documents.
+                Upload files directly to your content library. Supported formats include PDFs, videos, images, and documents.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -67,6 +72,16 @@ export default function ContentPage() {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="links" className="mt-6">
+          <LinkUpload 
+            onUploadComplete={(content) => {
+              console.log('Link added:', content)
+              // Switch back to library tab to show added content
+              setActiveTab('library')
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>

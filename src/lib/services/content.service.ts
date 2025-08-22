@@ -4,9 +4,29 @@ import { z } from 'zod'
 export const CreateContentSchema = z.object({
   name: z.string().min(1, 'Content name is required').max(255, 'Name too long'),
   type: z.enum(['pdf', 'video', 'image', 'document', 'other']),
-  file_url: z.string().url('Invalid file URL'),
-  file_size: z.number().positive('File size must be positive'),
+  source: z.enum(['upload', 'youtube', 'gdrive', 'external']).default('upload'),
+  file_url: z.string().url('Invalid file URL').optional(),
+  external_url: z.string().url('Invalid external URL').optional(),
+  file_size: z.number().positive('File size must be positive').optional(),
+  thumbnail_url: z.string().url('Invalid thumbnail URL').optional(),
+  duration: z.number().positive('Duration must be positive').optional(),
   metadata: z.record(z.unknown()).optional().default({}),
+}).refine((data) => {
+  // For upload source, file_url and file_size are required
+  if (data.source === 'upload') {
+    return data.file_url && data.file_size
+  }
+  // For external sources, external_url is required
+  return data.external_url
+}, {
+  message: "file_url and file_size required for uploads, external_url required for external sources",
+})
+
+export const UpdateContentSchema = z.object({
+  name: z.string().min(1, 'Content name is required').max(255, 'Name too long').optional(),
+  type: z.enum(['pdf', 'video', 'image', 'document', 'other']).optional(),
+  thumbnail_url: z.string().url('Invalid thumbnail URL').optional(),
+  metadata: z.record(z.unknown()).optional(),
 })
 
 export const ContentQuerySchema = z.object({
@@ -14,17 +34,26 @@ export const ContentQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
   search: z.string().optional(),
   type: z.enum(['pdf', 'video', 'image', 'document', 'other']).optional(),
+  source: z.enum(['upload', 'youtube', 'gdrive', 'external']).optional(),
 })
 
 export type CreateContent = z.infer<typeof CreateContentSchema>
+export type UpdateContent = z.infer<typeof UpdateContentSchema>
 export type ContentQuery = z.infer<typeof ContentQuerySchema>
 
 export interface Content {
   id: string
+  org_id: string
   name: string
   type: string
-  file_url: string
-  file_size: number
+  source: 'upload' | 'youtube' | 'gdrive' | 'external'
+  file_url?: string
+  external_url?: string
+  file_size?: number
+  thumbnail_url?: string
+  duration?: number
+  version: number
+  view_count: number
   metadata: Record<string, unknown>
   created_at: string
   created_by: string
@@ -53,6 +82,10 @@ export class ContentService {
 
     if (type) {
       queryBuilder = queryBuilder.eq('type', type)
+    }
+
+    if (query?.source) {
+      queryBuilder = queryBuilder.eq('source', query.source)
     }
 
     const { data, error, count } = await queryBuilder
@@ -99,8 +132,12 @@ export class ContentService {
       .insert({
         name: validated.name,
         type: validated.type,
+        source: validated.source,
         file_url: validated.file_url,
+        external_url: validated.external_url,
         file_size: validated.file_size,
+        thumbnail_url: validated.thumbnail_url,
+        duration: validated.duration,
         metadata: validated.metadata,
         created_by: userId,
       })
@@ -110,6 +147,25 @@ export class ContentService {
     if (error) {
       console.error('Content creation error:', error)
       throw new Error('Failed to create content')
+    }
+
+    return content as Content
+  }
+
+  async updateContent(contentId: string, data: UpdateContent): Promise<Content> {
+    const validated = UpdateContentSchema.parse(data)
+
+    const supabase = await createClient()
+    const { data: content, error } = await supabase
+      .from('onboard_content')
+      .update(validated)
+      .eq('id', contentId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Content update error:', error)
+      throw new Error('Failed to update content')
     }
 
     return content as Content

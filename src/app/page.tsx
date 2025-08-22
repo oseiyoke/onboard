@@ -54,10 +54,10 @@ export default function HomePage() {
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                   🤖
                 </div>
-                AI-Powered Assessments
+                Smart Assessments
               </CardTitle>
               <CardDescription>
-                Generate intelligent quizzes and assessments automatically from your content
+                Create quizzes and assessments manually or generate them from your content using AI
               </CardDescription>
             </CardHeader>
           </Card>

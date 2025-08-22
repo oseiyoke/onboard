@@ -197,18 +197,74 @@ export function FlowSidebar({ selectedNode, onNodeUpdate, onAddNode }: FlowSideb
             )}
 
             {selectedNode.type === 'assessment' && (
-              <div className="space-y-2">
-                <Label>Assessment Questions</Label>
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Question
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full gap-2">
-                    <Brain className="w-4 h-4" />
-                    Generate with AI
-                  </Button>
+                  <Label>Assessment</Label>
+                  {selectedNode.data?.assessmentId ? (
+                    <div className="space-y-2">
+                      <div className="p-3 border rounded bg-muted/50">
+                        <h4 className="font-medium text-sm">{selectedNode.data?.assessmentName || 'Selected Assessment'}</h4>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {selectedNode.data?.questionCount || 0} questions • {selectedNode.data?.passingScore || 70}% to pass
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          // Clear assessment selection
+                          handleUpdate('assessmentId', null)
+                          handleUpdate('assessmentName', null)
+                          handleUpdate('questionCount', 0)
+                          handleUpdate('passingScore', 70)
+                        }}
+                      >
+                        Change Assessment
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Choose an existing assessment or create a new one
+                      </p>
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        <Brain className="w-4 h-4" />
+                        Select Assessment
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        <Plus className="w-4 h-4" />
+                        Create New Assessment
+                      </Button>
+                    </div>
+                  )}
                 </div>
+
+                {selectedNode.data?.assessmentId && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label>Assessment Settings</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Required to pass</span>
+                          <input 
+                            type="checkbox" 
+                            className="rounded"
+                            defaultChecked={true}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Allow retries</span>
+                          <input 
+                            type="checkbox" 
+                            className="rounded"
+                            defaultChecked={true}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

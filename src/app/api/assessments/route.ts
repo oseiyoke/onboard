@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { contentService, ContentQuerySchema, CreateContentSchema } from '@/lib/services/content.service'
+import { assessmentService, AssessmentQuerySchema, CreateAssessmentSchema } from '@/lib/services/assessment.service'
 import { requireAuth, requireAdmin } from '@/lib/auth/server'
 import { withErrorHandler, createPaginatedResponse, createSuccessResponse } from '@/lib/api/errors'
 
@@ -8,12 +8,12 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   
   const url = new URL(request.url)
   const queryParams = Object.fromEntries(url.searchParams.entries())
-  const query = ContentQuerySchema.parse(queryParams)
+  const query = AssessmentQuerySchema.parse(queryParams)
   
-  const result = await contentService.getContent(query)
+  const result = await assessmentService.getAssessments(query)
   
   return createPaginatedResponse(
-    result.content,
+    result.assessments,
     {
       page: result.page,
       limit: result.limit,
@@ -31,26 +31,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const user = await requireAdmin(request)
   
   const body = await request.json()
+  const data = CreateAssessmentSchema.parse(body)
   
-  // Map legacy field names to new schema for backward compatibility
-  const normalizedBody = {
-    name: body.name,
-    type: body.type,
-    source: body.source || 'upload',
-    file_url: body.fileUrl || body.file_url,
-    external_url: body.externalUrl || body.external_url,
-    file_size: body.fileSize || body.file_size,
-    thumbnail_url: body.thumbnailUrl || body.thumbnail_url,
-    duration: body.duration,
-    metadata: body.metadata || {},
-  }
-  
-  const data = CreateContentSchema.parse(normalizedBody)
-  
-  const content = await contentService.createContent(user.id, data)
+  const assessment = await assessmentService.createAssessment(user.id, data)
   
   return createSuccessResponse(
-    { content },
+    { assessment },
     { 
       status: 201,
       headers: {
