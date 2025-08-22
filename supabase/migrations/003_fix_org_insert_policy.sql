@@ -29,3 +29,12 @@ CREATE POLICY "Users can create their own profile" ON onboard_users
     id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "Users can self insert" ON onboard_users;
+
+CREATE POLICY "Users can self insert"
+  ON onboard_users
+  FOR INSERT
+  WITH CHECK (
+    auth.uid() IS NULL      -- server context (trigger, service_role, etc.)
+    OR id = auth.uid()      -- normal client context
+  );

@@ -8,28 +8,28 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Building, User } from 'lucide-react'
+import { Loader2, User } from 'lucide-react'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export default function OnboardPage() {
   const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState<'check' | 'org' | 'profile' | 'error'>('check')
-  const [isNewOrg, setIsNewOrg] = useState(true)
-  const [orgName, setOrgName] = useState('')
-  const [orgSlug, setOrgSlug] = useState('')
+  const [step, setStep] = useState<'check' | 'profile' | 'error'>('check')
+  // Single-org architecture – no organisation fields needed
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [role, setRole] = useState<'admin' | 'participant'>('admin')
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
+  // We no longer need to store the user locally
   const [error, setError] = useState<string | null>(null)
   
   const router = useRouter()
-  let supabase: any
-  
+  let supabase: SupabaseClient | undefined
+
+  // createClient may throw in edge environments – capture safely
   try {
     supabase = createClient()
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Failed to create Supabase client:', err)
-    setError(err.message)
+    setError((err as Error).message)
   }
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function OnboardPage() {
           return;
         }
 
-        setUser(user);
+        // user is only needed for id; no local state required
 
         // 2. Check if user already exists in onboarding table
         const {
@@ -85,36 +85,24 @@ export default function OnboardPage() {
           return;
         }
 
-        console.log('[Onboard] New user – proceeding to organization setup');
-        setStep('org');
+        console.log('[Onboard] New user – proceeding to profile setup');
+        setStep('profile');
       } catch (error) {
         console.error('[Onboard] Unexpected error during checkUser()', error);
       }
     };
 
     checkUser();
-    // NOTE: `supabase` is stable within this component; remove it from deps to avoid loop
+    // removed supabase from deps intentionally
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
-  }
+  // Organisation slug helpers removed
 
-  const handleOrgNameChange = (value: string) => {
-    setOrgName(value)
-    setOrgSlug(generateSlug(value))
-  }
+  const handleCompleteProfile = async () => {
+    if (!firstName.trim() || !lastName.trim()) return
 
-  const handleCreateOrganization = async () => {
-    if (!orgName.trim() || !firstName.trim() || !lastName.trim()) return
-
-    console.log('[Onboard] Creating organization with:', {
-      orgName,
-      orgSlug,
+    console.log('[Onboard] Creating profile with:', {
       firstName,
       lastName,
       role,
@@ -128,8 +116,6 @@ export default function OnboardPage() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          orgName,
-          orgSlug,
           firstName,
           lastName,
           role,
@@ -210,53 +196,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key`}
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome to Onboard!</CardTitle>
           <CardDescription>
-            Let&apos;s set up your organization and get you started
+            Let&apos;s complete your profile and get you started
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {step === 'org' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Building className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-semibold">Organization Setup</h3>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="org-name">Organization Name *</Label>
-                <Input
-                  id="org-name"
-                  placeholder="e.g. Acme Corporation"
-                  value={orgName}
-                  onChange={(e) => handleOrgNameChange(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="org-slug">Organization URL</Label>
-                <div className="flex items-center">
-                  <span className="text-sm text-muted-foreground mr-2">onboard.app/</span>
-                  <Input
-                    id="org-slug"
-                    value={orgSlug}
-                    onChange={(e) => setOrgSlug(e.target.value)}
-                    placeholder="acme-corp"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  This will be your organization&apos;s unique URL
-                </p>
-              </div>
-
-              <Button 
-                onClick={() => setStep('profile')} 
-                disabled={!orgName.trim() || !orgSlug.trim()}
-                className="w-full"
-              >
-                Continue
-              </Button>
-            </div>
-          )}
+          {/* Organisation setup removed in single-org architecture */}
 
           {step === 'profile' && (
             <div className="space-y-4">
@@ -303,15 +247,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key`}
               </div>
 
               <div className="flex gap-3">
+                {/* No back button since org step is removed */}
                 <Button 
-                  variant="outline" 
-                  onClick={() => setStep('org')}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button 
-                  onClick={handleCreateOrganization}
+                  onClick={handleCompleteProfile}
                   disabled={loading || !firstName.trim() || !lastName.trim()}
                   className="flex-1"
                 >
