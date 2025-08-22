@@ -10,7 +10,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const queryParams = Object.fromEntries(url.searchParams.entries())
   const query = ContentQuerySchema.parse(queryParams)
   
-  const result = await contentService.getContentByOrg(user.orgId, query)
+  const result = await contentService.getContent(query)
   
   return createPaginatedResponse(
     result.content,
@@ -43,7 +43,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   
   const data = CreateContentSchema.parse(normalizedBody)
   
-  const content = await contentService.createContent(user.orgId, user.id, data)
+  const content = await contentService.createContent(user.id, data)
   
   return createSuccessResponse(
     { content },

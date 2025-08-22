@@ -37,7 +37,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   // Generate file key and upload URL
-  const fileKey = generateFileKey(user.orgId, filename)
+  const fileKey = generateFileKey(filename)
   const uploadUrl = await generateUploadUrl(fileKey, contentType)
 
   return createSuccessResponse({

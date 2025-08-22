@@ -11,7 +11,7 @@ export default async function EditFlowPage({ params }: PageProps) {
   const { id: flowId } = await params
   const user = await getAuthenticatedUser()
   
-  const flow = await flowService.getFlowById(flowId, user.orgId)
+  const flow = await flowService.getFlowById(flowId)
   
   if (!flow) {
     notFound()

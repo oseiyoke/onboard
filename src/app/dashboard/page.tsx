@@ -17,8 +17,8 @@ import {
 import { Suspense } from 'react'
 
 // Fetch real stats from the database
-async function getDashboardStats(orgId: string) {
-  const flowsResult = await flowService.getFlowsByOrg(orgId, { page: 1, limit: 100 })
+async function getDashboardStats() {
+  const flowsResult = await flowService.getFlows({ page: 1, limit: 100 })
   
   const totalFlows = flowsResult.total
   const activeFlows = flowsResult.flows.filter(f => f.is_active).length
@@ -135,7 +135,7 @@ export default async function DashboardPage() {
 
         {/* Stats Grid */}
         <Suspense fallback={<DashboardStatsSkeleton />}>
-          <DashboardStatsAsync orgId={user.orgId} />
+          <DashboardStatsAsync />
         </Suspense>
 
         {/* Quick Actions */}
@@ -239,7 +239,7 @@ export default async function DashboardPage() {
 }
 
 // Server component to fetch stats
-async function DashboardStatsAsync({ orgId }: { orgId: string }) {
-  const stats = await getDashboardStats(orgId)
+async function DashboardStatsAsync() {
+  const stats = await getDashboardStats()
   return <DashboardStatsCards stats={stats} />
 }

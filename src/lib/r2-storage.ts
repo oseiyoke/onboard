@@ -35,8 +35,8 @@ export function getPublicUrl(key: string) {
   return `${process.env.R2_PUBLIC_URL}/${key}`
 }
 
-export function generateFileKey(orgId: string, filename: string) {
+export function generateFileKey(filename: string) {
   const timestamp = Date.now()
   const cleanFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
-  return `${orgId}/${timestamp}_${cleanFilename}`
+  return `${timestamp}_${cleanFilename}`
 }

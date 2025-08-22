@@ -21,7 +21,6 @@ export type ContentQuery = z.infer<typeof ContentQuerySchema>
 
 export interface Content {
   id: string
-  org_id: string
   name: string
   type: string
   file_url: string
@@ -33,20 +32,19 @@ export interface Content {
 
 export class ContentService {
 
-  async getContentByOrg(orgId: string, query: ContentQuery = {}): Promise<{
+  async getContent(query?: Partial<ContentQuery>): Promise<{
     content: Content[]
     total: number
     page: number
     limit: number
   }> {
-    const { page, limit, search, type } = ContentQuerySchema.parse(query)
+    const { page, limit, search, type } = ContentQuerySchema.parse(query ?? {})
     const offset = (page - 1) * limit
 
     const supabase = await createClient()
     let queryBuilder = supabase
       .from('onboard_content')
       .select('*', { count: 'exact' })
-      .eq('org_id', orgId)
       .order('created_at', { ascending: false })
 
     if (search) {
@@ -73,13 +71,12 @@ export class ContentService {
     }
   }
 
-  async getContentById(contentId: string, orgId: string): Promise<Content | null> {
+  async getContentById(contentId: string): Promise<Content | null> {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('onboard_content')
       .select('*')
       .eq('id', contentId)
-      .eq('org_id', orgId)
       .single()
 
     if (error) {
@@ -93,14 +90,13 @@ export class ContentService {
     return data as Content
   }
 
-  async createContent(orgId: string, userId: string, data: CreateContent): Promise<Content> {
+  async createContent(userId: string, data: CreateContent): Promise<Content> {
     const validated = CreateContentSchema.parse(data)
 
     const supabase = await createClient()
     const { data: content, error } = await supabase
       .from('onboard_content')
       .insert({
-        org_id: orgId,
         name: validated.name,
         type: validated.type,
         file_url: validated.file_url,
@@ -119,13 +115,12 @@ export class ContentService {
     return content as Content
   }
 
-  async deleteContent(contentId: string, orgId: string): Promise<void> {
+  async deleteContent(contentId: string): Promise<void> {
     const supabase = await createClient()
     const { error } = await supabase
       .from('onboard_content')
       .delete()
       .eq('id', contentId)
-      .eq('org_id', orgId)
 
     if (error) {
       console.error('Content deletion error:', error)

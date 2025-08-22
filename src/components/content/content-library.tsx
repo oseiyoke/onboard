@@ -79,7 +79,6 @@ const formatDate = (dateString: string) => {
 }
 
 export function ContentLibrary() {
-  const { orgId } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<string>('all')
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null)
@@ -88,20 +87,16 @@ export function ContentLibrary() {
 
   // Fetch content from Supabase
   const { data: content = [], isLoading } = useQuery({
-    queryKey: ['content', orgId],
+    queryKey: ['content'],
     queryFn: async () => {
-      if (!orgId) return []
-      
       const { data, error } = await supabase
         .from('onboard_content')
         .select('*')
-        .eq('org_id', orgId)
         .order('created_at', { ascending: false })
 
       if (error) throw error
       return data as ContentItem[]
     },
-    enabled: !!orgId,
   })
 
   // Delete content mutation
@@ -115,7 +110,7 @@ export function ContentLibrary() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['content', orgId] })
+      queryClient.invalidateQueries({ queryKey: ['content'] })
     },
   })
 
