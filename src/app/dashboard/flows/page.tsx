@@ -49,7 +49,7 @@ const formatDate = (dateString: string) => {
 }
 
 export default function FlowsPage() {
-  const { orgId } = useAuth()
+  const { orgId, loading } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const supabase = createClient()
 
@@ -64,11 +64,12 @@ export default function FlowsPage() {
         .select('*')
         .eq('org_id', orgId)
         .order('created_at', { ascending: false })
-
+      
+      console.log("flows data", data)
       if (error) throw error
       return data as Flow[]
     },
-    enabled: !!orgId,
+    enabled: !!orgId && !loading,
   })
 
   // Filter flows based on search
@@ -77,7 +78,7 @@ export default function FlowsPage() {
     (flow.description && flow.description.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
-  if (isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">

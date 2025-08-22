@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/providers/auth-provider'
 import ReactFlow, {
   Node,
-  Edge,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -20,7 +19,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FlowToolbar } from './flow-toolbar'
 import { FlowNodeTypes } from './flow-node-types'
@@ -40,7 +39,7 @@ interface FlowBuilderProps {
 const nodeTypes = FlowNodeTypes
 
 function FlowBuilderContent({ flowId }: FlowBuilderProps) {
-  const { orgId } = useAuth()
+  const { orgId, loading } = useAuth()
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
@@ -127,6 +126,18 @@ function FlowBuilderContent({ flowId }: FlowBuilderProps) {
     }
     setNodes((nds) => [...nds, newNode])
   }, [setNodes])
+
+  // Wait for auth/org context before deciding not-found to avoid a false negative
+  if (loading || !orgId) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin mb-4" />
+          <p>Loading flow...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
