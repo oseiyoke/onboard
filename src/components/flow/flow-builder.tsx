@@ -49,7 +49,7 @@ function FlowBuilderContent({ flowId }: FlowBuilderProps) {
 
   // Fetch flow data
   const { data: flow, isLoading } = useQuery({
-    queryKey: ['flow', flowId],
+    queryKey: ['flow', flowId, orgId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('onboard_flows')
@@ -61,7 +61,7 @@ function FlowBuilderContent({ flowId }: FlowBuilderProps) {
       if (error) throw error
       return data
     },
-    enabled: !!flowId && !!orgId,
+    enabled: !!flowId && !!orgId && !loading,
   })
 
   // Load flow data into React Flow
