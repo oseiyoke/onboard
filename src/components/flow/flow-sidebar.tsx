@@ -79,12 +79,6 @@ export function FlowSidebar({ selectedNode, onNodeUpdate, onAddNode }: FlowSideb
   if (!selectedNode) {
     return (
       <div className="w-80 border-r bg-card p-4 space-y-4">
-        <div className="space-y-2">
-          <h3 className="font-semibold">Flow Builder</h3>
-          <p className="text-sm text-muted-foreground">
-            Select a phase to edit its properties, or add a new phase to get started.
-          </p>
-        </div>
 
         <Card>
           <CardHeader>

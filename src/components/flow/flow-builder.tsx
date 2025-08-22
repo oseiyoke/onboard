@@ -189,14 +189,12 @@ function FlowBuilderContent({ initialFlow }: FlowBuilderProps) {
             nodeTypes={nodeTypes}
             fitView
             className="bg-muted/5"
+            defaultViewport={{ x: 0, y: 0, zoom: 0.6 }}
           >
             <Background />
             <Controls />
             <MiniMap />
             
-            <Panel position="top-center">
-              <FlowToolbar onAddNode={addNode} />
-            </Panel>
           </ReactFlow>
         </div>
       </div>

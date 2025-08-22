@@ -51,7 +51,7 @@ function BaseNode({
 export function ContentNode({ data, selected }: NodeProps) {
   return (
     <>
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} />
       <BaseNode selected={selected} type="content">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export function ContentNode({ data, selected }: NodeProps) {
           </div>
         </CardContent>
       </BaseNode>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </>
   )
 }
@@ -89,7 +89,7 @@ export function ContentNode({ data, selected }: NodeProps) {
 export function AssessmentNode({ data, selected }: NodeProps) {
   return (
     <>
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} />
       <BaseNode selected={selected} type="assessment">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ export function AssessmentNode({ data, selected }: NodeProps) {
           </div>
         </CardContent>
       </BaseNode>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </>
   )
 }
@@ -127,7 +127,7 @@ export function AssessmentNode({ data, selected }: NodeProps) {
 export function InfoNode({ data, selected }: NodeProps) {
   return (
     <>
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} />
       <BaseNode selected={selected} type="info">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export function InfoNode({ data, selected }: NodeProps) {
           </div>
         </CardContent>
       </BaseNode>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </>
   )
 }
@@ -178,7 +178,7 @@ export function StartNode({ data, selected }: NodeProps) {
           </p>
         </CardContent>
       </BaseNode>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </>
   )
 }
@@ -187,7 +187,7 @@ export function StartNode({ data, selected }: NodeProps) {
 export function EndNode({ data, selected }: NodeProps) {
   return (
     <>
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} />
       <BaseNode selected={selected} type="end">
         <CardContent className="p-4 text-center">
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
