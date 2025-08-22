@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,19 +10,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
-interface CreateFlowFormProps {
-  createFlow: (formData: FormData) => Promise<{ error?: string } | void>
-}
-
-export function CreateFlowForm({ createFlow }: CreateFlowFormProps) {
+export function CreateFlowForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     
     const name = formData.get('name') as string
+    const descriptionRaw = formData.get('description') as string | null
+    const description = typeof descriptionRaw === 'string' ? descriptionRaw.trim() : undefined
+    
     if (!name.trim()) {
       setError('Flow name is required')
       return
@@ -31,14 +32,33 @@ export function CreateFlowForm({ createFlow }: CreateFlowFormProps) {
     setError(null)
 
     try {
-      const result = await createFlow(formData)
-      if (result?.error) {
-        setError(result.error)
+      const response = await fetch('/api/flows', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          description,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
-      // Success case is handled by redirect in the server action
+
+      const result = await response.json()
+      
+      // Success - redirect to flow editor
+      const flowId = result.flow?.id
+      if (!flowId) {
+        throw new Error('Unexpected response from server')
+      }
+      router.push(`/dashboard/flows/${flowId}/edit`)
     } catch (err) {
       console.error('Flow creation error:', err)
-      setError('An unexpected error occurred')
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -59,7 +79,6 @@ export function CreateFlowForm({ createFlow }: CreateFlowFormProps) {
             <Input
               id="name"
               name="name"
-              placeholder="e.g. Employee Onboarding, New Hire Training"
               required
               disabled={loading}
               autoFocus
@@ -71,7 +90,6 @@ export function CreateFlowForm({ createFlow }: CreateFlowFormProps) {
             <Textarea
               id="description"
               name="description"
-              placeholder="Describe what this onboarding flow covers..."
               rows={3}
               disabled={loading}
             />

@@ -12,10 +12,10 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: Ro
   const user = await requireAdmin(request)
   const { id } = await params
   
-  const flow = await flowService.duplicateFlow(id, user.orgId, user.id)
+  const flow = await flowService.duplicateFlow(id, user.id)
   
   // Invalidate flows cache to show the duplicated flow
-  await invalidateFlowsCache(user.orgId)
+  await invalidateFlowsCache()
   
   return createSuccessResponse(
     { flow },

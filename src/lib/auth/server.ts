@@ -6,6 +6,7 @@ export interface AuthenticatedUser {
   id: string
   email: string
   role: 'admin' | 'participant'
+  orgId: string
   firstName: string | null
   lastName: string | null
 }
@@ -26,10 +27,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     redirect('/login')
   }
 
-  // Fetch user role and names
+  // Fetch user role, org and names
   const { data: userData, error } = await supabase
     .from('onboard_users')
-    .select('role, first_name, last_name')
+    .select('role, org_id, first_name, last_name')
     .eq('id', user.id)
     .single()
 
@@ -41,6 +42,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     id: user.id,
     email: user.email || '',
     role: userData.role,
+    orgId: userData.org_id,
     firstName: userData.first_name,
     lastName: userData.last_name,
   }
@@ -62,10 +64,10 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
       return null
     }
 
-    // Fetch user role and names
+    // Fetch user role, org and names
     const { data: userData, error } = await supabase
       .from('onboard_users')
-      .select('role, first_name, last_name')
+      .select('role, org_id, first_name, last_name')
       .eq('id', user.id)
       .single()
 
@@ -77,6 +79,7 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
       id: user.id,
       email: user.email || '',
       role: userData.role,
+      orgId: userData.org_id,
       firstName: userData.first_name,
       lastName: userData.last_name,
     }
@@ -136,7 +139,7 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 
     const { data: userData, error } = await supabase
       .from('onboard_users')
-      .select('role, first_name, last_name')
+      .select('role, org_id, first_name, last_name')
       .eq('id', user.id)
       .single()
 
@@ -148,6 +151,7 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
       id: user.id,
       email: user.email || '',
       role: userData.role,
+      orgId: userData.org_id,
       firstName: userData.first_name,
       lastName: userData.last_name,
     }

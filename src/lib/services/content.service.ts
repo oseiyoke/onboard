@@ -32,7 +32,6 @@ export interface Content {
 }
 
 export class ContentService {
-  private supabase = createClient()
 
   async getContentByOrg(orgId: string, query: ContentQuery = {}): Promise<{
     content: Content[]
@@ -43,7 +42,8 @@ export class ContentService {
     const { page, limit, search, type } = ContentQuerySchema.parse(query)
     const offset = (page - 1) * limit
 
-    let queryBuilder = this.supabase
+    const supabase = await createClient()
+    let queryBuilder = supabase
       .from('onboard_content')
       .select('*', { count: 'exact' })
       .eq('org_id', orgId)
@@ -74,7 +74,8 @@ export class ContentService {
   }
 
   async getContentById(contentId: string, orgId: string): Promise<Content | null> {
-    const { data, error } = await this.supabase
+    const supabase = await createClient()
+    const { data, error } = await supabase
       .from('onboard_content')
       .select('*')
       .eq('id', contentId)
@@ -95,7 +96,8 @@ export class ContentService {
   async createContent(orgId: string, userId: string, data: CreateContent): Promise<Content> {
     const validated = CreateContentSchema.parse(data)
 
-    const { data: content, error } = await this.supabase
+    const supabase = await createClient()
+    const { data: content, error } = await supabase
       .from('onboard_content')
       .insert({
         org_id: orgId,
@@ -118,7 +120,8 @@ export class ContentService {
   }
 
   async deleteContent(contentId: string, orgId: string): Promise<void> {
-    const { error } = await this.supabase
+    const supabase = await createClient()
+    const { error } = await supabase
       .from('onboard_content')
       .delete()
       .eq('id', contentId)

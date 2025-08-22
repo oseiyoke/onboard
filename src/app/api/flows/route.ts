@@ -11,7 +11,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const queryParams = Object.fromEntries(url.searchParams.entries())
   const query = FlowQuerySchema.parse(queryParams)
   
-  const result = await flowService.getFlowsByOrg(user.orgId, query)
+  const result = await flowService.getFlows(query)
   
   return createPaginatedResponse(
     result.flows,
@@ -34,10 +34,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json()
   const data = CreateFlowSchema.parse(body)
   
-  const flow = await flowService.createFlow(user.orgId, user.id, data)
+  const flow = await flowService.createFlow(user.id, data)
   
   // Invalidate flows cache to show the new flow
-  await invalidateFlowsCache(user.orgId)
+  await invalidateFlowsCache()
   
   return createSuccessResponse(
     { flow },

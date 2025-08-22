@@ -16,7 +16,6 @@ interface PageProps {
 }
 
 export default async function FlowsPage({ searchParams }: PageProps) {
-  const user = await getAuthenticatedUser()
   const params = await searchParams
   
   return (
@@ -24,13 +23,13 @@ export default async function FlowsPage({ searchParams }: PageProps) {
       <FlowsHeader />
       
       <Suspense key={JSON.stringify(params)} fallback={<FlowsListSkeleton />}>
-        <FlowsListAsync orgId={user.orgId} searchParams={params} />
+        <FlowsListAsync searchParams={params} />
       </Suspense>
     </div>
   )
 }
 
-async function FlowsListAsync({ orgId, searchParams }: { orgId: string; searchParams: SearchParams }) {
+async function FlowsListAsync({ searchParams }: { searchParams: SearchParams }) {
   const query = {
     search: searchParams.search,
     page: searchParams.page ? parseInt(searchParams.page, 10) : 1,
@@ -38,7 +37,7 @@ async function FlowsListAsync({ orgId, searchParams }: { orgId: string; searchPa
     active: searchParams.active === 'true' ? true : searchParams.active === 'false' ? false : undefined,
   }
   
-  const result = await flowService.getFlowsByOrg(orgId, query)
+  const result = await flowService.getFlows(query)
   
   return (
     <FlowsList

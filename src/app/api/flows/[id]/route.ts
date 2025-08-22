@@ -12,7 +12,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
   const user = await requireAuth(request)
   const { id } = await params
   
-  const flow = await flowService.getFlowById(id, user.orgId)
+  const flow = await flowService.getFlowById(id)
   
   if (!flow) {
     throw new NotFoundError('Flow not found')
@@ -35,10 +35,10 @@ export const PATCH = withErrorHandler(async (request: NextRequest, { params }: R
   const body = await request.json()
   const data = UpdateFlowSchema.parse(body)
   
-  const flow = await flowService.updateFlow(id, user.orgId, data)
+  const flow = await flowService.updateFlow(id, data)
   
   // Invalidate cache for the updated flow
-  await invalidateFlowCache(id, user.orgId)
+  await invalidateFlowCache(id)
   
   return createSuccessResponse(
     { flow },
@@ -54,10 +54,10 @@ export const DELETE = withErrorHandler(async (request: NextRequest, { params }: 
   const user = await requireAdmin(request)
   const { id } = await params
   
-  await flowService.deleteFlow(id, user.orgId)
+  await flowService.deleteFlow(id)
   
   // Invalidate cache for the deleted flow and flows list
-  await invalidateFlowsCache(user.orgId)
+  await invalidateFlowsCache()
   
   return createSuccessResponse(
     { success: true },

@@ -35,20 +35,19 @@ export interface Flow {
   created_at: string
   updated_at: string
   created_by: string
-  org_id: string
 }
 
 export class FlowService {
-  async getFlowsByOrg(orgId: string, query: FlowQuery = {}): Promise<{
+  async getFlows(query?: Partial<FlowQuery>): Promise<{
     flows: Flow[]
     total: number
     page: number
     limit: number
   }> {
-    const parsedQuery = FlowQuerySchema.parse(query)
+    const parsedQuery = FlowQuerySchema.parse(query ?? {})
     
     // Create cache key based on orgId and query parameters
-    const cacheKey = `flows-${orgId}-${JSON.stringify(parsedQuery)}`
+    const cacheKey = `flows-${JSON.stringify(parsedQuery)}`
     // Create Supabase client outside the cached scope to avoid calling dynamic
     // APIs (cookies()) inside unstable_cache which is disallowed by Next.js.
     const supabase = await createClient()
@@ -61,7 +60,6 @@ export class FlowService {
         let queryBuilder = supabase
           .from('onboard_flows')
           .select('*', { count: 'exact' })
-          .eq('org_id', orgId)
           .order('created_at', { ascending: false })
 
         if (search) {
@@ -91,13 +89,13 @@ export class FlowService {
       },
       [cacheKey],
       {
-        revalidate: 300, // 5 minutes
-        tags: [CACHE_TAGS.FLOWS, CACHE_TAGS.USER_FLOWS(orgId)],
+        revalidate: 300,
+        tags: [CACHE_TAGS.FLOWS, CACHE_TAGS.USER_FLOWS],
       }
     )()
   }
 
-  async getFlowById(flowId: string, orgId: string): Promise<Flow | null> {
+  async getFlowById(flowId: string): Promise<Flow | null> {
     // Create Supabase client outside the cached scope for the same reason as above
     const supabase = await createClient()
     return await unstable_cache(
@@ -106,7 +104,6 @@ export class FlowService {
           .from('onboard_flows')
           .select('*')
           .eq('id', flowId)
-          .eq('org_id', orgId)
           .single()
 
         if (error) {
@@ -119,23 +116,23 @@ export class FlowService {
 
         return data as Flow
       },
-      [`flow-${flowId}-${orgId}`],
+      [`flow-${flowId}`],
       {
-        revalidate: 300, // 5 minutes
-        tags: [CACHE_TAGS.FLOW(flowId), CACHE_TAGS.USER_FLOWS(orgId)],
+        revalidate: 300,
+        tags: [CACHE_TAGS.FLOW(flowId), CACHE_TAGS.USER_FLOWS],
       }
     )()
   }
 
-  async createFlow(orgId: string, userId: string, data: CreateFlow): Promise<Flow> {
+  async createFlow(userId: string, data: CreateFlow): Promise<Flow> {
     const validated = CreateFlowSchema.parse(data)
     const flowId = crypto.randomUUID()
 
-    const { data: flow, error } = await createClient()
+    const supabase = await createClient()
+    const { data: flow, error } = await supabase
       .from('onboard_flows')
       .insert({
         id: flowId,
-        org_id: orgId,
         name: validated.name,
         description: validated.description || null,
         flow_data: {
@@ -163,17 +160,17 @@ export class FlowService {
     return flow as Flow
   }
 
-  async updateFlow(flowId: string, orgId: string, data: UpdateFlow): Promise<Flow> {
+  async updateFlow(flowId: string, data: UpdateFlow): Promise<Flow> {
     const validated = UpdateFlowSchema.parse(data)
 
-    const { data: flow, error } = await createClient()
+    const supabase = await createClient()
+    const { data: flow, error } = await supabase
       .from('onboard_flows')
       .update({
         ...validated,
         updated_at: new Date().toISOString(),
       })
       .eq('id', flowId)
-      .eq('org_id', orgId)
       .select()
       .single()
 
@@ -185,12 +182,12 @@ export class FlowService {
     return flow as Flow
   }
 
-  async deleteFlow(flowId: string, orgId: string): Promise<void> {
-    const { error } = await createClient()
+  async deleteFlow(flowId: string): Promise<void> {
+    const supabase = await createClient()
+    const { error } = await supabase
       .from('onboard_flows')
       .delete()
       .eq('id', flowId)
-      .eq('org_id', orgId)
 
     if (error) {
       console.error('Flow deletion error:', error)
@@ -198,13 +195,13 @@ export class FlowService {
     }
   }
 
-  async duplicateFlow(flowId: string, orgId: string, userId: string): Promise<Flow> {
-    const originalFlow = await this.getFlowById(flowId, orgId)
+  async duplicateFlow(flowId: string, userId: string): Promise<Flow> {
+    const originalFlow = await this.getFlowById(flowId)
     if (!originalFlow) {
       throw new Error('Flow not found')
     }
 
-    return this.createFlow(orgId, userId, {
+    return this.createFlow(userId, {
       name: `${originalFlow.name} (Copy)`,
       description: originalFlow.description || undefined,
     })
