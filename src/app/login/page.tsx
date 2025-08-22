@@ -1,24 +1,62 @@
 "use client"
 
 import { useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ThemeSelector } from '@/components/theme-selector'
-import { login, signup, type AuthFormState } from './actions'
+import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
-
-  const initialState: AuthFormState = { error: undefined }
-
-  const [loginState, loginAction] = useFormState(login, initialState)
-  const [signupState, signupAction] = useFormState(signup, initialState)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const isLogin = mode === 'login'
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup'
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'An error occurred')
+        return
+      }
+
+      // Success - redirect based on response
+      if (data.redirectTo) {
+        router.push(data.redirectTo)
+      } else {
+        router.push('/onboard') // Default fallback
+      }
+    } catch (error) {
+      console.error('Auth error:', error)
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -37,7 +75,7 @@ export default function LoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form action={loginAction} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
@@ -46,6 +84,7 @@ export default function LoginPage() {
                     type="email"
                     placeholder="Enter your email"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -57,13 +96,21 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     required
                     minLength={6}
+                    disabled={loading}
                   />
                 </div>
-                {loginState?.error && (
-                  <p className="text-sm text-red-500">{loginState.error}</p>
+                {error && (
+                  <p className="text-sm text-red-500">{error}</p>
                 )}
-                <Button type="submit" className="w-full">
-                  Sign In
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
                 </Button>
                 <div className="text-center space-y-2">
                   <Link
@@ -92,7 +139,7 @@ export default function LoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form action={signupAction} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
@@ -101,6 +148,7 @@ export default function LoginPage() {
                     type="email"
                     placeholder="Enter your email"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -112,13 +160,21 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     required
                     minLength={6}
+                    disabled={loading}
                   />
                 </div>
-                {signupState?.error && (
-                  <p className="text-sm text-red-500">{signupState.error}</p>
+                {error && (
+                  <p className="text-sm text-red-500">{error}</p>
                 )}
-                <Button type="submit" className="w-full">
-                  Create Account
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
                 </Button>
                 <div className="text-center">
                   <button

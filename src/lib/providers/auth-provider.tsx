@@ -7,7 +7,6 @@ import { createContext, useContext, useEffect, useState } from 'react'
 type AuthContextType = {
   user: User | null
   loading: boolean
-  orgId: string | null
   userRole: 'admin' | 'participant' | null
   signOut: () => Promise<void>
 }
@@ -15,7 +14,6 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  orgId: null,
   userRole: null,
   signOut: async () => {},
 })
@@ -23,7 +21,6 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [orgId, setOrgId] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'admin' | 'participant' | null>(null)
   const supabase = createClient()
 
@@ -36,12 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch user's organization and role
         const { data: userData, error } = await supabase
           .from('onboard_users')
-          .select('org_id, role')
+          .select('role')
           .eq('id', user.id)
           .single()
         
         if (userData) {
-          setOrgId(userData.org_id)
           setUserRole(userData.role)
         } else if (error && error.code === 'PGRST116') {
           // User not found in onboard_users, needs onboarding
@@ -61,21 +57,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           const { data: userData, error } = await supabase
             .from('onboard_users')
-            .select('org_id, role')
+            .select('role')
             .eq('id', session.user.id)
             .single()
           
           if (userData) {
-            setOrgId(userData.org_id)
             setUserRole(userData.role)
           } else if (error && error.code === 'PGRST116') {
             // User not found in onboard_users, needs onboarding
             console.log('User needs onboarding')
-            setOrgId(null)
             setUserRole(null)
           }
         } else {
-          setOrgId(null)
           setUserRole(null)
         }
         
@@ -87,6 +80,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   const signOut = async () => {
+    try {
+      // Call our API endpoint for logout
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+    
+    // Also call Supabase signOut to clean up client state
     await supabase.auth.signOut()
   }
 
@@ -94,7 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       loading, 
-      orgId, 
       userRole, 
       signOut 
     }}>

@@ -2,112 +2,82 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, User } from 'lucide-react'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 export default function OnboardPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'check' | 'profile' | 'error'>('check')
-  // Single-org architecture – no organisation fields needed
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [role, setRole] = useState<'admin' | 'participant'>('admin')
-  // We no longer need to store the user locally
   const [error, setError] = useState<string | null>(null)
   
   const router = useRouter()
-  let supabase: SupabaseClient | undefined
-
-  // createClient may throw in edge environments – capture safely
-  try {
-    supabase = createClient()
-  } catch (err: unknown) {
-    console.error('Failed to create Supabase client:', err)
-    setError((err as Error).message)
-  }
 
   useEffect(() => {
     const checkUser = async () => {
-      console.log('[Onboard] Starting user check');
-      
-      // Check if supabase client was created successfully
-      if (!supabase) {
-        console.error('[Onboard] Supabase client not available');
-        setStep('error');
-        return;
-      }
+      console.log('[Onboard] Starting user check via API');
       
       try {
-        // 1. Get authenticated user
-        console.log('[Onboard] Calling supabase.auth.getUser()');
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser();
-        console.log('[Onboard] getUser() resolved');
-        console.log('[Onboard] Auth user: and error', user, authError);
-        if (authError) {
-          console.error('[Onboard] supabase.auth.getUser() error:', authError);
-        }
-        console.log('[Onboard] Auth user:', user);
+        const response = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+        });
 
-        if (!user) {
-          console.log('[Onboard] No user found. Redirecting to /login');
+        if (!response.ok) {
+          console.log('[Onboard] User not authenticated, redirecting to login');
           router.push('/login');
           return;
         }
 
-        // user is only needed for id; no local state required
+        const data = await response.json();
+        console.log('[Onboard] User data:', data);
 
-        // 2. Check if user already exists in onboarding table
-        const {
-          data: existingUser,
-          error: existingUserError,
-        } = await supabase
-          .from('onboard_users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (existingUserError) {
-          console.error('[Onboard] Error querying onboard_users:', existingUserError);
+        if (!data.success || !data.user) {
+          console.log('[Onboard] Invalid response, redirecting to login');
+          router.push('/login');
+          return;
         }
 
-        if (existingUser) {
-          console.log('[Onboard] User already onboarded. Redirecting to /dashboard');
+        // Check if user is already onboarded
+        if (data.user.isOnboarded) {
+          console.log('[Onboard] User already onboarded, redirecting to dashboard');
           router.replace('/dashboard');
           return;
         }
 
-        console.log('[Onboard] New user – proceeding to profile setup');
+        console.log('[Onboard] User needs onboarding, showing profile form');
         setStep('profile');
       } catch (error) {
-        console.error('[Onboard] Unexpected error during checkUser()', error);
+        console.error('[Onboard] Error checking user:', error);
+        setError('Failed to verify authentication. Please try again.');
+        setStep('error');
       }
     };
 
     checkUser();
-    // removed supabase from deps intentionally
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  // Organisation slug helpers removed
-
   const handleCompleteProfile = async () => {
-    if (!firstName.trim() || !lastName.trim()) return
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please fill in all required fields')
+      return
+    }
 
     console.log('[Onboard] Creating profile with:', {
       firstName,
       lastName,
       role,
     })
+    
     setLoading(true)
+    setError(null)
+    
     try {
       const response = await fetch('/api/onboard', {
         method: 'POST',
@@ -125,16 +95,17 @@ export default function OnboardPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'Failed to complete onboarding')
+        setError(data.error || 'Failed to complete onboarding')
         return
       }
 
       // Success! Redirect to dashboard
+      console.log('[Onboard] Profile created successfully, redirecting to dashboard')
       router.replace('/dashboard')
       
     } catch (error) {
       console.error('Onboarding error:', error)
-      alert('An error occurred. Please try again.')
+      setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -145,32 +116,27 @@ export default function OnboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-red-600">Configuration Error</CardTitle>
+            <CardTitle className="text-red-600">Authentication Error</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {error || 'Unable to connect to Supabase'}
+              {error || 'Unable to verify your authentication'}
             </p>
-            <div className="bg-muted p-4 rounded-md space-y-2">
-              <p className="text-sm font-semibold">To fix this:</p>
-              <ol className="text-sm list-decimal list-inside space-y-1">
-                <li>Create a <code className="bg-background px-1 py-0.5 rounded">.env.local</code> file in your project root</li>
-                <li>Add your Supabase credentials:</li>
-              </ol>
-              <pre className="bg-background p-2 rounded text-xs overflow-x-auto">
-{`NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key`}
-              </pre>
-              <p className="text-sm">
-                Get these values from your <a href="https://app.supabase.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Supabase dashboard</a>
-              </p>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => router.push('/login')} 
+                className="w-full"
+              >
+                Return to Login
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+                className="w-full"
+              >
+                Try Again
+              </Button>
             </div>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="w-full"
-            >
-              Retry
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -246,8 +212,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key`}
                 </p>
               </div>
 
+              {error && (
+                <p className="text-sm text-red-500">{error}</p>
+              )}
+
               <div className="flex gap-3">
-                {/* No back button since org step is removed */}
                 <Button 
                   onClick={handleCompleteProfile}
                   disabled={loading || !firstName.trim() || !lastName.trim()}

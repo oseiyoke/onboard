@@ -5,7 +5,6 @@ import { NextRequest } from 'next/server'
 export interface AuthenticatedUser {
   id: string
   email: string
-  orgId: string
   role: 'admin' | 'participant'
   firstName: string | null
   lastName: string | null
@@ -27,10 +26,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     redirect('/login')
   }
 
-  // Fetch user's organization and role
+  // Fetch user role and names
   const { data: userData, error } = await supabase
     .from('onboard_users')
-    .select('org_id, role, first_name, last_name')
+    .select('role, first_name, last_name')
     .eq('id', user.id)
     .single()
 
@@ -41,7 +40,6 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
   return {
     id: user.id,
     email: user.email || '',
-    orgId: userData.org_id,
     role: userData.role,
     firstName: userData.first_name,
     lastName: userData.last_name,
@@ -64,10 +62,10 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
       return null
     }
 
-    // Fetch user's organization and role
+    // Fetch user role and names
     const { data: userData, error } = await supabase
       .from('onboard_users')
-      .select('org_id, role, first_name, last_name')
+      .select('role, first_name, last_name')
       .eq('id', user.id)
       .single()
 
@@ -78,7 +76,6 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     return {
       id: user.id,
       email: user.email || '',
-      orgId: userData.org_id,
       role: userData.role,
       firstName: userData.first_name,
       lastName: userData.last_name,
@@ -139,7 +136,7 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 
     const { data: userData, error } = await supabase
       .from('onboard_users')
-      .select('org_id, role, first_name, last_name')
+      .select('role, first_name, last_name')
       .eq('id', user.id)
       .single()
 
@@ -150,7 +147,6 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
     return {
       id: user.id,
       email: user.email || '',
-      orgId: userData.org_id,
       role: userData.role,
       firstName: userData.first_name,
       lastName: userData.last_name,
