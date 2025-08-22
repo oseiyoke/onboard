@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { AuthProvider } from "@/lib/providers/auth-provider";
 import { ThemeProvider } from "@/lib/providers/theme-provider";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,6 +28,12 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeProvider>
               {children}
+              <Toaster 
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                }}
+              />
             </ThemeProvider>
           </AuthProvider>
         </QueryProvider>

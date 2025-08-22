@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
-import { useAuth } from '@/lib/providers/auth-provider'
+import { useState, useCallback } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import ReactFlow, {
   Node,
+  Edge,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -19,7 +18,6 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FlowToolbar } from './flow-toolbar'
 import { FlowNodeTypes } from './flow-node-types'
@@ -31,63 +29,50 @@ import {
   Loader2
 } from 'lucide-react'
 import Link from 'next/link'
+import { Flow } from '@/lib/services/flow.service'
+import { toast } from 'sonner'
 
 interface FlowBuilderProps {
-  flowId: string
+  initialFlow: Flow
 }
 
 const nodeTypes = FlowNodeTypes
 
-function FlowBuilderContent({ flowId }: FlowBuilderProps) {
-  const { orgId, loading } = useAuth()
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+function FlowBuilderContent({ initialFlow }: FlowBuilderProps) {
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    (initialFlow.flow_data as { nodes?: Node[] })?.nodes || []
+  )
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    (initialFlow.flow_data as { edges?: Edge[] })?.edges || []
+  )
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const supabase = createClient()
-  const queryClient = useQueryClient()
 
-  // Fetch flow data
-  const { data: flow, isLoading } = useQuery({
-    queryKey: ['flow', flowId, orgId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('onboard_flows')
-        .select('*')
-        .eq('id', flowId)
-        .eq('org_id', orgId)
-        .single()
-
-      if (error) throw error
-      return data
-    },
-    enabled: !!flowId && !!orgId && !loading,
-  })
-
-  // Load flow data into React Flow
-  useEffect(() => {
-    if (flow?.flow_data) {
-      setNodes(flow.flow_data.nodes || [])
-      setEdges(flow.flow_data.edges || [])
-    }
-  }, [flow, setNodes, setEdges])
-
-  // Save flow mutation
+  // Save flow mutation using API
   const saveFlowMutation = useMutation({
     mutationFn: async () => {
       const flowData = { nodes, edges }
-      const { error } = await supabase
-        .from('onboard_flows')
-        .update({ 
-          flow_data: flowData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', flowId)
+      
+      const response = await fetch(`/api/flows/${initialFlow.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ flow_data: flowData }),
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to save flow')
+      }
+
+      return response.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['flow', flowId] })
+      toast.success('Flow saved successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to save: ${error.message}`)
     },
   })
 
@@ -127,50 +112,6 @@ function FlowBuilderContent({ flowId }: FlowBuilderProps) {
     setNodes((nds) => [...nds, newNode])
   }, [setNodes])
 
-  // Wait for auth/org context before deciding not-found to avoid a false negative
-  if (loading || !orgId) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin mb-4" />
-          <p>Loading flow...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin mb-4" />
-          <p>Loading flow...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!flow) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Flow not found</h2>
-            <p className="text-muted-foreground mb-4">
-              The flow you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
-            </p>
-            <Button asChild>
-              <Link href="/dashboard/flows">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Flows
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
@@ -184,10 +125,10 @@ function FlowBuilderContent({ flowId }: FlowBuilderProps) {
               </Link>
             </Button>
             <div>
-              <h1 className="text-xl font-semibold">{flow.name}</h1>
+              <h1 className="text-xl font-semibold">{initialFlow.name}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant={flow.is_active ? 'default' : 'secondary'}>
-                  {flow.is_active ? 'Active' : 'Draft'}
+                <Badge variant={initialFlow.is_active ? 'default' : 'secondary'}>
+                  {initialFlow.is_active ? 'Active' : 'Draft'}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
                   {nodes.length} phase{nodes.length !== 1 ? 's' : ''}
@@ -203,12 +144,12 @@ function FlowBuilderContent({ flowId }: FlowBuilderProps) {
               disabled={isSaving || saveFlowMutation.isPending}
               className="gap-2"
             >
-              {isSaving ? (
+              {isSaving || saveFlowMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving || saveFlowMutation.isPending ? 'Saving...' : 'Save'}
             </Button>
             <Button className="gap-2">
               <Play className="w-4 h-4" />
@@ -263,10 +204,10 @@ function FlowBuilderContent({ flowId }: FlowBuilderProps) {
   )
 }
 
-export function FlowBuilder({ flowId }: FlowBuilderProps) {
+export function FlowBuilder({ initialFlow }: FlowBuilderProps) {
   return (
     <ReactFlowProvider>
-      <FlowBuilderContent flowId={flowId} />
+      <FlowBuilderContent initialFlow={initialFlow} />
     </ReactFlowProvider>
   )
 }

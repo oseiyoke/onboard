@@ -1,19 +1,20 @@
 import { NextRequest } from 'next/server'
-import { contentService, ContentQuerySchema, CreateContentSchema } from '@/lib/services/content.service'
+import { flowService, FlowQuerySchema, CreateFlowSchema } from '@/lib/services/flow.service'
 import { requireAuth, requireAdmin } from '@/lib/auth/server'
 import { withErrorHandler, createPaginatedResponse, createSuccessResponse } from '@/lib/api/errors'
+import { invalidateFlowsCache } from '@/lib/utils/cache-invalidation'
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const user = await requireAuth(request)
   
   const url = new URL(request.url)
   const queryParams = Object.fromEntries(url.searchParams.entries())
-  const query = ContentQuerySchema.parse(queryParams)
+  const query = FlowQuerySchema.parse(queryParams)
   
-  const result = await contentService.getContentByOrg(user.orgId, query)
+  const result = await flowService.getFlowsByOrg(user.orgId, query)
   
   return createPaginatedResponse(
-    result.content,
+    result.flows,
     {
       page: result.page,
       limit: result.limit,
@@ -31,22 +32,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const user = await requireAdmin(request)
   
   const body = await request.json()
+  const data = CreateFlowSchema.parse(body)
   
-  // Map legacy field names to new schema
-  const normalizedBody = {
-    name: body.name,
-    type: body.type,
-    file_url: body.fileUrl || body.file_url,
-    file_size: body.fileSize || body.file_size,
-    metadata: body.metadata || {},
-  }
+  const flow = await flowService.createFlow(user.orgId, user.id, data)
   
-  const data = CreateContentSchema.parse(normalizedBody)
-  
-  const content = await contentService.createContent(user.orgId, user.id, data)
+  // Invalidate flows cache to show the new flow
+  await invalidateFlowsCache(user.orgId)
   
   return createSuccessResponse(
-    { content },
+    { flow },
     { 
       status: 201,
       headers: {

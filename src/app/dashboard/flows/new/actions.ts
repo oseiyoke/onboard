@@ -1,74 +1,40 @@
 "use server"
 
 import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
-import { randomUUID } from 'crypto'
+import { getAuthenticatedUser } from '@/lib/auth/server'
+import { flowService } from '@/lib/services/flow.service'
+import { revalidatePath } from 'next/cache'
 
 export async function createFlow(formData: FormData) {
-  const name = String(formData.get('name'))
-  const description = String(formData.get('description')) || null
-  const supabase = await createClient()
+  try {
+    // Get authenticated user (will redirect if not authenticated/onboarded)
+    const user = await getAuthenticatedUser()
 
-  // Check if user is authenticated
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    return { error: 'Unauthorized' }
-  }
+    // Check if user is admin
+    if (user.role !== 'admin') {
+      return { error: 'Only administrators can create flows' }
+    }
 
-  // Get user's organization
-  const { data: onboardUser, error: userError } = await supabase
-    .from('onboard_users')
-    .select('org_id, role')
-    .eq('id', user.id)
-    .single()
+    const name = String(formData.get('name')).trim()
+    const description = String(formData.get('description')).trim() || undefined
 
-  if (userError || !onboardUser) {
-    return { error: 'User not found or not onboarded' }
-  }
+    if (!name) {
+      return { error: 'Flow name is required' }
+    }
 
-  if (onboardUser.role !== 'admin') {
-    return { error: 'Only administrators can create flows' }
-  }
-
-  if (!name.trim()) {
-    return { error: 'Flow name is required' }
-  }
-
-  const flowId = randomUUID()
-  const { data, error } = await supabase
-    .from('onboard_flows')
-    .insert({
-      id: flowId,
-      org_id: onboardUser.org_id,
-      name: name.trim(),
+    // Create flow using service
+    const flow = await flowService.createFlow(user.orgId, user.id, {
+      name,
       description,
-      flow_data: {
-        nodes: [
-          {
-            id: 'start',
-            type: 'start',
-            position: { x: 250, y: 50 },
-            data: { label: 'Start' }
-          }
-        ],
-        edges: []
-      },
-      is_active: false,
-      created_by: user.id,
     })
-    .select()
-    .single()
 
-    console.log("data", data)
-    console.log("error", error)
+    // Revalidate the flows list page
+    revalidatePath('/dashboard/flows')
 
-  if (error) {
+    // Redirect to the flow editor
+    redirect(`/dashboard/flows/${flow.id}/edit`)
+  } catch (error) {
     console.error('Flow creation error:', error)
     return { error: 'Failed to create flow' }
   }
-
-  // Redirect to the flow editor – this will throw a NEXT_REDIRECT error
-  // that Next.js App Router will handle internally. By keeping it outside
-  // of a try/catch block we avoid logging it as an application error.
-  redirect(`/dashboard/flows/${data.id}/edit`)
 }
