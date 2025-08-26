@@ -2,13 +2,13 @@ import { getAuthenticatedUser } from '@/lib/auth/server'
 import { flowService } from '@/lib/services/flow.service'
 import { stageService } from '@/lib/services/stage.service'
 import { notFound } from 'next/navigation'
-import { EditFlowClient } from '@/components/flow/edit-flow-client'
+import { FlowViewClient } from '@/components/flow/flow-view-client'
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
-export default async function EditFlowPage({ params }: PageProps) {
+export default async function FlowViewPage({ params }: PageProps) {
   const { id: flowId } = await params
   await getAuthenticatedUser() // Ensure user is authenticated
   
@@ -21,5 +21,5 @@ export default async function EditFlowPage({ params }: PageProps) {
   // Fetch stages for this flow
   const stages = await stageService.getStagesByFlowId(flowId)
   
-  return <EditFlowClient flow={flow} stages={stages || []} />
+  return <FlowViewClient flow={flow} stages={stages || []} />
 }

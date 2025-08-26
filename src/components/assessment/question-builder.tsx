@@ -371,7 +371,7 @@ export function QuestionBuilder({ questions, onChange, onNext }: QuestionBuilder
       )}
 
       {questions.length > 0 && (
-        <div className="flex justify-between">
+        <div className="flex justify-center">
           <Button
             onClick={() => {
               const newQuestion: Question = {
@@ -394,14 +394,6 @@ export function QuestionBuilder({ questions, onChange, onNext }: QuestionBuilder
             Add Another Question
           </Button>
 
-          <Button
-            onClick={onNext}
-            disabled={!isValid}
-            className="gap-2"
-          >
-            Continue to Preview
-            <ArrowRight className="w-4 h-4" />
-          </Button>
         </div>
       )}
     </div>

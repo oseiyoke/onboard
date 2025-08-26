@@ -189,8 +189,8 @@ export function FlowsList({ initialFlows, pagination, searchParams }: FlowsListP
       toast.dismiss(loadingToast)
       toast.success('Flow deleted successfully')
       
-      // Refresh the page to show updated list
       startTransition(() => {
+        router.push('/dashboard/flows')
         router.refresh()
       })
     } catch (error) {
@@ -266,23 +266,29 @@ export function FlowsList({ initialFlows, pagination, searchParams }: FlowsListP
               const nodeCount = (flow.flow_data as { nodes?: unknown[] })?.nodes?.length || 0
               
               return (
-                <Card key={flow.id} className="group hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg font-semibold truncate">
-                          {flow.name}
-                        </CardTitle>
-                        {flow.description && (
-                          <CardDescription className="mt-1 line-clamp-2">
-                            {flow.description}
-                          </CardDescription>
-                        )}
-                      </div>
+                <Link key={flow.id} href={`/dashboard/flows/${flow.id}`}>
+                  <Card className="group hover:shadow-md transition-shadow cursor-pointer h-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg font-semibold truncate">
+                            {flow.name}
+                          </CardTitle>
+                          {flow.description && (
+                            <CardDescription className="mt-1 line-clamp-2">
+                              {flow.description}
+                            </CardDescription>
+                          )}
+                        </div>
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="opacity-0 group-hover:opacity-100"
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -317,7 +323,11 @@ export function FlowsList({ initialFlows, pagination, searchParams }: FlowsListP
                           
                           <DropdownMenuItem 
                             className="text-red-600"
-                            onSelect={() => handleDeleteFlow(flow.id, flow.name)}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleDeleteFlow(flow.id, flow.name)
+                            }}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete
@@ -349,7 +359,7 @@ export function FlowsList({ initialFlows, pagination, searchParams }: FlowsListP
                         </div>
                       </div>
                       
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-2 pt-2" onClick={(e) => e.preventDefault()}>
                         <Button asChild size="sm" className="flex-1">
                           <Link href={`/dashboard/flows/${flow.id}/edit`}>
                             <Edit className="w-3 h-3 mr-1" />
@@ -366,6 +376,7 @@ export function FlowsList({ initialFlows, pagination, searchParams }: FlowsListP
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               )
             })}
           </div>

@@ -29,8 +29,11 @@ import {
 type CreationMethod = 'manual' | 'content' | 'youtube' | 'prompt'
 
 interface AssessmentBuilderProps {
-  creationMethod: CreationMethod
+  creationMethod?: CreationMethod
+  mode?: 'create' | 'edit'
   assessmentId?: string // For editing existing assessments
+  initialData?: AssessmentData // For editing mode
+  initialQuestions?: Question[] // For editing mode
   onCancel: () => void
 }
 
@@ -45,20 +48,29 @@ interface StepConfig {
 
 
 
-export function AssessmentBuilder({ creationMethod, assessmentId, onCancel }: AssessmentBuilderProps) {
+export function AssessmentBuilder({ 
+  creationMethod = 'manual', 
+  mode = 'create',
+  assessmentId, 
+  initialData,
+  initialQuestions,
+  onCancel 
+}: AssessmentBuilderProps) {
   const [currentStep, setCurrentStep] = useState<Step>('details')
   const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set())
-  const [assessmentData, setAssessmentData] = useState<AssessmentData>({
-    name: '',
-    description: '',
-    passingScore: 70,
-    retryLimit: 3,
-    randomizeQuestions: false,
-    randomizeAnswers: true,
-    showFeedback: true,
-    showCorrectAnswers: true,
-  })
-  const [questions, setQuestions] = useState<Question[]>([])
+  const [assessmentData, setAssessmentData] = useState<AssessmentData>(
+    initialData || {
+      name: '',
+      description: '',
+      passingScore: 70,
+      retryLimit: 3,
+      randomizeQuestions: false,
+      randomizeAnswers: true,
+      showFeedback: true,
+      showCorrectAnswers: true,
+    }
+  )
+  const [questions, setQuestions] = useState<Question[]>(initialQuestions || [])
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [savedAssessmentId, setSavedAssessmentId] = useState<string | undefined>(assessmentId)
@@ -71,9 +83,9 @@ export function AssessmentBuilder({ creationMethod, assessmentId, onCancel }: As
 
   const steps: StepConfig[] = [
     { id: 'details', title: 'Assessment Details', description: 'Basic information about the assessment' },
-    ...(creationMethod !== 'manual' ? [{ id: 'generation' as Step, title: 'AI Generation', description: 'Generate questions automatically', icon: <Wand2 className="w-4 h-4" /> }] : []),
+    ...(creationMethod !== 'manual' && mode === 'create' ? [{ id: 'generation' as Step, title: 'AI Generation', description: 'Generate questions automatically', icon: <Wand2 className="w-4 h-4" /> }] : []),
     { id: 'questions', title: 'Questions', description: 'Create and manage questions' },
-    { id: 'preview', title: 'Preview & Publish', description: 'Review and save assessment', icon: <Eye className="w-4 h-4" /> },
+    { id: 'preview', title: 'Preview & Publish', description: mode === 'edit' ? 'Review and update assessment' : 'Review and save assessment', icon: <Eye className="w-4 h-4" /> },
   ]
 
   // Auto-advance to appropriate step based on creation method

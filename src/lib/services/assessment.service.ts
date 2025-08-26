@@ -125,9 +125,15 @@ export class AssessmentService {
     const offset = (page - 1) * limit
 
     const supabase = await createClient()
+    
+    // Get assessments with aggregated stats
     let queryBuilder = supabase
       .from('onboard_assessments')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        questions:onboard_questions(id),
+        attempts:onboard_assessment_attempts(id, score, max_score)
+      `, { count: 'exact' })
       .order('updated_at', { ascending: false })
 
     if (search) {
@@ -146,8 +152,40 @@ export class AssessmentService {
       throw new Error('Failed to fetch assessments')
     }
 
+    // Enhance assessments with computed metrics
+    const assessmentsWithMetrics = (data || []).map((assessment: Assessment & { 
+      questions?: { id: string }[],
+      attempts?: { id: string, score?: number, max_score?: number }[]
+    }) => {
+      const questionCount = assessment.questions?.length || 0
+      const attempts = assessment.attempts?.length || 0
+      let avgScore = 0
+      
+      if (attempts > 0) {
+        const totalScore = assessment.attempts!.reduce((sum: number, attempt) => {
+          if (attempt.max_score && attempt.max_score > 0) {
+            return sum + ((attempt.score || 0) / attempt.max_score) * 100
+          }
+          return sum
+        }, 0)
+        avgScore = Math.round(totalScore / attempts)
+      }
+
+      // Return clean assessment object without the nested relations
+      const { questions: _, attempts: __, ...cleanAssessment } = assessment
+      // Suppress unused variable warnings as we need to destructure to remove these fields
+      void _; void __; 
+      
+      return {
+        ...cleanAssessment,
+        questionCount,
+        attempts,
+        avgScore
+      }
+    })
+
     return {
-      assessments: data as Assessment[],
+      assessments: assessmentsWithMetrics as Assessment[],
       total: count || 0,
       page,
       limit,

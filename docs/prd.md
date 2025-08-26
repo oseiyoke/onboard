@@ -64,12 +64,13 @@ Create a flexible, intuitive onboarding platform that transforms how organizatio
 ## 3. Core Features (MVP)
 
 ### 3.1 Flow Builder
-**Visual Drag-and-Drop Interface**
-- Canvas-based flow designer using React Flow
-- Phase creation with branching logic
-- Conditional path routing based on:
-  - Quiz scores
-  - Role/department selection
+**Stage-Based Interface**
+- Form-based flow designer with sequential stages
+- Stage creation with multiple item types
+- Structured learning path progression:
+  - Content delivery
+  - Assessment completion
+  - Information sections
   - Previous phase completion
   - Time-based triggers
 
@@ -603,7 +604,7 @@ CREATE POLICY "Users can view their org data" ON onboard_flows
     /flows
 /components
   /ui (shadcn)
-  /flow-builder
+  /flow
   /theme-picker
   /content-viewer
 /lib

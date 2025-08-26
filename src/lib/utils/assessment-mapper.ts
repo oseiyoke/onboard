@@ -1,4 +1,4 @@
-import type { CreateAssessment, CreateQuestion } from '@/lib/services/assessment.service'
+import type { CreateAssessment, CreateQuestion, Assessment, Question as ApiQuestion } from '@/lib/services/assessment.service'
 import type { GeneratedQuestion } from '@/lib/api/assessment'
 
 // UI types from the component
@@ -123,6 +123,70 @@ export function createEmptyQuestion(position: number): Question {
     explanation: '',
     points: 1,
     position
+  }
+}
+
+/**
+ * Convert API Assessment to UI Assessment format (for the assessments list page)
+ */
+export function apiAssessmentToUi(assessment: Assessment): {
+  id: string
+  name: string
+  description: string
+  questionCount: number
+  passingScore: number
+  attempts: number
+  avgScore: number
+  isPublished: boolean
+  generationType: 'manual' | 'content'
+  createdAt: string
+  updatedAt: string
+} {
+  return {
+    id: assessment.id,
+    name: assessment.name,
+    description: assessment.description || '',
+    questionCount: 0, // Will be populated by aggregation query
+    passingScore: assessment.passing_score,
+    attempts: 0, // Will be populated by aggregation query
+    avgScore: 0, // Will be populated by aggregation query
+    isPublished: assessment.is_published,
+    generationType: assessment.generation_source?.type === 'content' ? 'content' : 'manual',
+    createdAt: assessment.created_at,
+    updatedAt: assessment.updated_at
+  }
+}
+
+/**
+ * Convert API Assessment to UI AssessmentData format (for editing)
+ */
+export function apiAssessmentToUiData(assessment: Assessment): AssessmentData {
+  return {
+    name: assessment.name,
+    description: assessment.description || '',
+    passingScore: assessment.passing_score,
+    retryLimit: assessment.retry_limit,
+    timeLimitSeconds: assessment.time_limit_seconds,
+    randomizeQuestions: assessment.randomize_questions,
+    randomizeAnswers: assessment.randomize_answers,
+    showFeedback: assessment.show_feedback,
+    showCorrectAnswers: assessment.show_correct_answers
+  }
+}
+
+/**
+ * Convert API Question to UI Question format
+ */
+export function apiQuestionToUi(question: ApiQuestion): Question {
+  return {
+    id: question.id,
+    type: question.type,
+    question: question.question,
+    options: question.options || [],
+    correctAnswer: question.correct_answer,
+    explanation: question.explanation || '',
+    points: question.points,
+    position: question.position
   }
 }
 

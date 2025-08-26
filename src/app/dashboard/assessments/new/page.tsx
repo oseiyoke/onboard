@@ -48,7 +48,7 @@ export default function NewAssessmentPage() {
         <div className="text-center">
           <h1 className="text-2xl font-semibold">Create New Assessment</h1>
           <p className="text-muted-foreground">
-            Choose how you'd like to create your assessment
+            Choose how you&apos;d like to create your assessment
           </p>
         </div>
       </div>

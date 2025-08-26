@@ -25,9 +25,9 @@ A modern, multi-tenant SaaS platform for creating customized onboarding flows wi
 - **Cloudflare R2** integration for file storage (configured but not fully implemented)
 
 #### Phase 4: Flow Builder Core
-- **Visual flow builder** using React Flow
-- **Custom node types** (Content, Assessment, Info phases)
-- **Drag-and-drop interface** for creating onboarding flows
+- **Stage-based flow builder** with structured learning paths
+- **Stage management** with Content, Assessment, and Info items
+- **Form-based interface** for creating and editing learning stages
 - **Real-time flow editing** with auto-save functionality
 
 ### 🚧 In Progress / Planned Features
@@ -195,10 +195,10 @@ The platform uses Supabase Auth with email/password authentication:
 
 ## 📊 Flow Builder
 
-The visual flow builder allows admins to:
-- Create complex onboarding workflows
-- Add different phase types (Content, Assessment, Info)
-- Connect phases with conditional logic
+The stage-based flow builder allows admins to:
+- Create structured onboarding workflows
+- Add different item types (Content, Assessment, Info) to stages
+- Organize learning paths with sequential stages
 - Preview flows before publishing
 - Track participant progress through flows
 

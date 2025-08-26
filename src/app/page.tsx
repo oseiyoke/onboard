@@ -40,10 +40,10 @@ export default function HomePage() {
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                   🎯
                 </div>
-                Visual Flow Builder
+                Stage-Based Builder
               </CardTitle>
               <CardDescription>
-                Create complex onboarding flows with our intuitive drag-and-drop interface
+                Create structured onboarding flows with our intuitive stage-based interface
               </CardDescription>
             </CardHeader>
           </Card>

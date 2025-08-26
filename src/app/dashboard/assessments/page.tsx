@@ -22,6 +22,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import Link from 'next/link'
+import { apiAssessmentToUi } from '@/lib/utils/assessment-mapper'
+import type { Assessment as ApiAssessment } from '@/lib/services/assessment.service'
 
 interface Assessment {
   id: string
@@ -51,8 +53,9 @@ async function fetchAssessments(): Promise<Assessment[]> {
       return []
     }
 
-    const json = await res.json() as { data: Assessment[] }
-    return json.data ?? []
+    const json = await res.json() as { data: ApiAssessment[] }
+    // Convert API assessments to UI format
+    return (json.data ?? []).map(apiAssessmentToUi)
   } catch (e) {
     console.error('Error while fetching assessments', e)
     return []
