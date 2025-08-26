@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Search, Filter, Edit, Trash2, Play, Copy, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,17 +37,42 @@ interface Assessment {
   updatedAt: string
 }
 
-// TODO: Fetch assessments from API
-const assessments: Assessment[] = []
+// Assessments will be loaded from the API
+
+async function fetchAssessments(): Promise<Assessment[]> {
+  try {
+    const res = await fetch('/api/assessments?limit=100', {
+      // Force next.js to always revalidate on client navigation
+      cache: 'no-store',
+    })
+
+    if (!res.ok) {
+      console.error('Failed to fetch assessments', await res.text())
+      return []
+    }
+
+    const json = await res.json() as { data: Assessment[] }
+    return json.data ?? []
+  } catch (e) {
+    console.error('Error while fetching assessments', e)
+    return []
+  }
+}
 
 export default function AssessmentsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedAssessment, setSelectedAssessment] = useState<string | null>(null)
+  const [assessments, setAssessments] = useState<Assessment[]>([])
+
+  useEffect(() => {
+    // Fetch assessments on mount
+    fetchAssessments().then(setAssessments)
+  }, [])
 
   const filteredAssessments = assessments.filter(assessment =>
     assessment.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    assessment.description.toLowerCase().includes(searchQuery.toLowerCase())
+    (assessment.description ?? '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const handleDelete = (assessmentId: string) => {

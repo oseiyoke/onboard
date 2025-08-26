@@ -4,7 +4,7 @@ import { requireAuth, requireAdmin } from '@/lib/auth/server'
 import { withErrorHandler, createPaginatedResponse, createSuccessResponse } from '@/lib/api/errors'
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
-  const user = await requireAuth(request)
+  await requireAuth(request) // Just need authentication, not user data
   
   const url = new URL(request.url)
   const queryParams = Object.fromEntries(url.searchParams.entries())
@@ -31,8 +31,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const user = await requireAdmin(request)
   
   const body = await request.json()
-  const data = CreateAssessmentSchema.parse(body)
-  
+  // Parse without org_id - it will be fetched from the user's record
+  const data = CreateAssessmentSchema.omit({ org_id: true }).parse(body)
+
+  console.log('Creating assessment with data:', data)
+
   const assessment = await assessmentService.createAssessment(user.id, data)
   
   return createSuccessResponse(

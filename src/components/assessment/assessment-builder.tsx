@@ -5,38 +5,33 @@ import { Button } from '@/components/ui/button'
 import { QuestionBuilder } from './question-builder'
 import { AIGenerationForm } from './ai-generation-form'
 import { AssessmentPreview } from './assessment-preview'
+
 import { Save, Eye, Wand2, Plus, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
+import { toast } from 'sonner'
+import { 
+  generateAssessment, 
+  createAssessment, 
+  createQuestions,
+  publishAssessment 
+} from '@/lib/api/assessment'
+import {
+  uiAssessmentToApi,
+  uiQuestionsToApi,
+  apiGeneratedQuestionsToUi,
+  validateAssessmentForSave,
+  createEmptyQuestion,
+  type AssessmentData,
+  type Question
+} from '@/lib/utils/assessment-mapper'
 
 type CreationMethod = 'manual' | 'content' | 'youtube' | 'prompt'
 
 interface AssessmentBuilderProps {
   creationMethod: CreationMethod
+  assessmentId?: string // For editing existing assessments
   onCancel: () => void
-}
-
-export interface AssessmentData {
-  name: string
-  description: string
-  passingScore: number
-  retryLimit: number
-  timeLimitSeconds?: number
-  randomizeQuestions: boolean
-  randomizeAnswers: boolean
-  showFeedback: boolean
-  showCorrectAnswers: boolean
-}
-
-export interface Question {
-  id: string
-  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay'
-  question: string
-  options: string[]
-  correctAnswer: string | string[] | boolean
-  explanation: string
-  points: number
-  position: number
 }
 
 type Step = 'details' | 'generation' | 'questions' | 'preview'
@@ -48,17 +43,9 @@ interface StepConfig {
   icon?: React.ReactNode
 }
 
-interface GenerationData {
-  type: CreationMethod
-  contentId?: string
-  youtubeUrl?: string
-  prompt?: string
-  questionCount: number
-  difficulty: 'easy' | 'medium' | 'hard'
-  questionTypes: string[]
-}
 
-export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilderProps) {
+
+export function AssessmentBuilder({ creationMethod, assessmentId, onCancel }: AssessmentBuilderProps) {
   const [currentStep, setCurrentStep] = useState<Step>('details')
   const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set())
   const [assessmentData, setAssessmentData] = useState<AssessmentData>({
@@ -74,6 +61,13 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
   const [questions, setQuestions] = useState<Question[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [savedAssessmentId, setSavedAssessmentId] = useState<string | undefined>(assessmentId)
+  const [lastGenerationSource, setLastGenerationSource] = useState<{
+    type: CreationMethod
+    contentId?: string
+    prompt?: string
+    youtubeUrl?: string
+  } | null>(null)
 
   const steps: StepConfig[] = [
     { id: 'details', title: 'Assessment Details', description: 'Basic information about the assessment' },
@@ -89,63 +83,133 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
     }
   }, [creationMethod, currentStep])
 
-  const handleGenerateQuestions = async (generationData: GenerationData) => {
+  const handleGenerateQuestions = async (generationData: {
+    type: CreationMethod
+    contentId?: string
+    prompt?: string
+    youtubeUrl?: string
+    questionCount: number
+    difficulty: 'easy' | 'medium' | 'hard'
+    questionTypes: string[]
+    assessmentName: string
+  }) => {
     setIsGenerating(true)
     try {
-      // TODO: Call API to generate questions
-      console.log('Generating questions with:', generationData)
+      // Normalize the generation data for the API
+      let request
       
-      // Mock generated questions
-      const mockQuestions: Question[] = [
-        {
-          id: '1',
-          type: 'multiple_choice',
-          question: 'What is the main concept discussed in the content?',
-          options: ['Option A', 'Option B', 'Option C', 'Option D'],
-          correctAnswer: 'Option A',
-          explanation: 'This is the correct answer because...',
-          points: 1,
-          position: 0
-        },
-        {
-          id: '2',
-          type: 'true_false',
-          question: 'The content emphasizes the importance of teamwork.',
-          options: [],
-          correctAnswer: true,
-          explanation: 'The content clearly states that teamwork is essential.',
-          points: 1,
-          position: 1
+      if (generationData.type === 'youtube' || generationData.youtubeUrl) {
+        // YouTube generation
+        request = {
+          youtubeUrl: generationData.youtubeUrl,
+          assessmentConfig: {
+            name: assessmentData.name,
+            description: assessmentData.description,
+            questionCount: generationData.questionCount,
+            difficulty: generationData.difficulty,
+            questionTypes: generationData.questionTypes,
+            passingScore: assessmentData.passingScore,
+          }
         }
-      ]
+        setLastGenerationSource({
+          type: 'youtube',
+          youtubeUrl: generationData.youtubeUrl
+        })
+      } else {
+        // Content or prompt generation
+        request = {
+          type: generationData.type === 'manual' ? 'prompt' : generationData.type,
+          contentId: generationData.contentId,
+          prompt: generationData.prompt,
+          assessmentConfig: {
+            name: assessmentData.name,
+            description: assessmentData.description,
+            questionCount: generationData.questionCount,
+            difficulty: generationData.difficulty,
+            questionTypes: generationData.questionTypes,
+            passingScore: assessmentData.passingScore,
+          }
+        }
+        setLastGenerationSource({
+          type: generationData.type,
+          contentId: generationData.contentId,
+          prompt: generationData.prompt
+        })
+      }
+
+      const response = await generateAssessment(request)
+      const uiQuestions = apiGeneratedQuestionsToUi(response.result.questions)
       
-      setQuestions(mockQuestions)
+      setQuestions(uiQuestions)
       setCompletedSteps(prev => new Set([...prev, 'generation']))
       setCurrentStep('questions')
+      
+      toast.success(`Generated ${uiQuestions.length} questions successfully!`)
     } catch (error) {
       console.error('Generation failed:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to generate questions')
     } finally {
       setIsGenerating(false)
     }
   }
 
-  const handleSaveAssessment = async () => {
+  const handleSaveAssessment = async (publish = false) => {
+    // Validate assessment before saving
+    const validationError = validateAssessmentForSave(assessmentData, questions)
+    if (validationError) {
+      toast.error(validationError)
+      return null
+    }
+
     setIsSaving(true)
     try {
-      // TODO: Call API to save assessment
-      console.log('Saving assessment:', { assessmentData, questions })
-      // Redirect to assessments list on success
+      let assessmentId = savedAssessmentId
+
+      // Create assessment if it doesn't exist
+      if (!assessmentId) {
+        const generationType: 'manual' | 'content' | 'prompt' | 'youtube' = lastGenerationSource?.type || 'manual'
+        const apiAssessment = uiAssessmentToApi(
+          assessmentData,
+          generationType,
+          lastGenerationSource || undefined
+        )
+
+        const assessmentResponse = await createAssessment(apiAssessment)
+        assessmentId = assessmentResponse.assessment.id
+        setSavedAssessmentId(assessmentId)
+      }
+
+      // Create questions if they don't exist on the server
+      if (questions.length > 0 && assessmentId) {
+        const apiQuestions = uiQuestionsToApi(questions)
+        await createQuestions(assessmentId, apiQuestions)
+      }
+
+      // Publish if requested
+      if (publish && assessmentId) {
+        await publishAssessment(assessmentId)
+        toast.success('Assessment published successfully!')
+        
+        // Redirect to assessments list after publish
+        setTimeout(() => {
+          window.location.href = '/dashboard/assessments'
+        }, 1000)
+      } else {
+        toast.success('Assessment saved as draft!')
+      }
+
+      return assessmentId
     } catch (error) {
       console.error('Save failed:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to save assessment')
+      return null
     } finally {
       setIsSaving(false)
     }
   }
 
   const handlePublishAssessment = async () => {
-    await handleSaveAssessment()
-    // TODO: Publish the assessment
-    console.log('Publishing assessment')
+    await handleSaveAssessment(true)
   }
 
   const isReadyToSave = assessmentData.name && questions.length > 0
@@ -306,7 +370,7 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
                     </div>
                     <Switch
                       checked={assessmentData.randomizeQuestions}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked: boolean) => 
                         setAssessmentData({ ...assessmentData, randomizeQuestions: checked })
                       }
                     />
@@ -321,7 +385,7 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
                     </div>
                     <Switch
                       checked={assessmentData.randomizeAnswers}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked: boolean) => 
                         setAssessmentData({ ...assessmentData, randomizeAnswers: checked })
                       }
                     />
@@ -336,7 +400,7 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
                     </div>
                     <Switch
                       checked={assessmentData.showFeedback}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked: boolean) => 
                         setAssessmentData({ ...assessmentData, showFeedback: checked })
                       }
                     />
@@ -351,7 +415,7 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
                     </div>
                     <Switch
                       checked={assessmentData.showCorrectAnswers}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked: boolean) => 
                         setAssessmentData({ ...assessmentData, showCorrectAnswers: checked })
                       }
                     />
@@ -392,16 +456,7 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
               </div>
             <Button
               onClick={() => {
-                const newQuestion: Question = {
-                  id: Date.now().toString(),
-                  type: 'multiple_choice',
-                  question: '',
-                  options: ['', '', '', ''],
-                  correctAnswer: '',
-                  explanation: '',
-                  points: 1,
-                  position: questions.length
-                }
+                const newQuestion = createEmptyQuestion(questions.length)
                 setQuestions([...questions, newQuestion])
               }}
               className="gap-2"
@@ -526,7 +581,7 @@ export function AssessmentBuilder({ creationMethod, onCancel }: AssessmentBuilde
               Cancel
             </Button>
             <Button 
-              onClick={handleSaveAssessment}
+              onClick={() => handleSaveAssessment(false)}
               disabled={!isReadyToSave || isSaving}
                       variant="outline"
               className="gap-2"

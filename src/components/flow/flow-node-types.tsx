@@ -8,7 +8,8 @@ import {
   Brain, 
   Info,
   Play,
-  CheckCircle
+  CheckCircle,
+  Image as ImageIcon
 } from 'lucide-react'
 
 // Base node component with common styling
@@ -47,128 +48,90 @@ function BaseNode({
   )
 }
 
-// Content Phase Node
-export function ContentNode({ data, selected }: NodeProps) {
-  return (
-    <>
-      <Handle type="target" position={Position.Left} />
-      <BaseNode selected={selected} type="content">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-              <FileText className="w-4 h-4 text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                CONTENT
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <h4 className="font-medium text-sm mb-1 truncate">
-            {data.label || 'Content Phase'}
-          </h4>
-          {data.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {data.description}
-            </p>
-          )}
-          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-            <FileText className="w-3 h-3" />
-            <span>0 files</span>
-          </div>
-        </CardContent>
-      </BaseNode>
-      <Handle type="source" position={Position.Right} />
-    </>
-  )
-}
+// Stage Node (replaces individual content/assessment/info nodes)
+export function StageNode({ data, selected }: NodeProps) {
+  const items = data.items || []
+  const itemTypes = items.map((item: any) => item.type)
+  const hasContent = itemTypes.includes('content')
+  const hasAssessment = itemTypes.includes('assessment')
+  const hasInfo = itemTypes.includes('info')
 
-// Assessment Phase Node
-export function AssessmentNode({ data, selected }: NodeProps) {
+  const getStageColor = () => {
+    if (hasContent && hasAssessment && hasInfo) return 'border-indigo-500 bg-indigo-50'
+    if (hasContent && hasAssessment) return 'border-teal-500 bg-teal-50'
+    if (hasContent && hasInfo) return 'border-cyan-500 bg-cyan-50'
+    if (hasAssessment && hasInfo) return 'border-violet-500 bg-violet-50'
+    if (hasContent) return 'border-blue-500 bg-blue-50'
+    if (hasAssessment) return 'border-green-500 bg-green-50'
+    if (hasInfo) return 'border-purple-500 bg-purple-50'
+    return 'border-gray-300 bg-gray-50'
+  }
+
   return (
     <>
       <Handle type="target" position={Position.Left} />
-      <BaseNode selected={selected} type="assessment">
+      <Card 
+        className={`
+          min-w-[200px] max-w-[250px] transition-all duration-200
+          ${selected ? 'ring-2 ring-primary ring-offset-2' : ''}
+          ${getStageColor()}
+        `}
+      >
         <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
-              <Brain className="w-4 h-4 text-green-600" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="w-8 h-8 bg-white/80 rounded flex items-center justify-center">
+                <Play className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <Badge variant="secondary" className="bg-white/80 text-gray-800 text-xs">
+                  STAGE
+                </Badge>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                ASSESSMENT
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <h4 className="font-medium text-sm mb-1 truncate">
-            {data.label || 'Assessment Phase'}
-          </h4>
-          {data.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {data.description}
-            </p>
-          )}
-          <div className="mt-2 space-y-1">
-            {data.assessmentId ? (
-              <>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Brain className="w-3 h-3" />
-                  <span>{data.questionCount || 0} questions</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span>Pass: {data.passingScore || 70}%</span>
-                </div>
-              </>
-            ) : (
-              <div className="text-xs text-orange-600">
-                No assessment selected
+            {data.image_url && (
+              <div className="w-6 h-6 bg-white/80 rounded flex items-center justify-center">
+                <ImageIcon className="w-3 h-3 text-gray-500" />
               </div>
             )}
           </div>
-        </CardContent>
-      </BaseNode>
-      <Handle type="source" position={Position.Right} />
-    </>
-  )
-}
-
-// Info Phase Node
-export function InfoNode({ data, selected }: NodeProps) {
-  return (
-    <>
-      <Handle type="target" position={Position.Left} />
-      <BaseNode selected={selected} type="info">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
-              <Info className="w-4 h-4 text-purple-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
-                INFO
-              </Badge>
-            </div>
-          </div>
         </CardHeader>
         <CardContent className="pt-0">
           <h4 className="font-medium text-sm mb-1 truncate">
-            {data.label || 'Info Phase'}
+            {data.title || 'Untitled Stage'}
           </h4>
           {data.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
+            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
               {data.description}
             </p>
           )}
-          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-            <Info className="w-3 h-3" />
-            <span>Information</span>
+          
+          {/* Item type indicators */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {hasContent && (
+              <div className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                <FileText className="w-3 h-3" />
+                <span>{items.filter((i: any) => i.type === 'content').length}</span>
+              </div>
+            )}
+            {hasAssessment && (
+              <div className="flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                <Brain className="w-3 h-3" />
+                <span>{items.filter((i: any) => i.type === 'assessment').length}</span>
+              </div>
+            )}
+            {hasInfo && (
+              <div className="flex items-center gap-1 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                <Info className="w-3 h-3" />
+                <span>{items.filter((i: any) => i.type === 'info').length}</span>
+              </div>
+            )}
+            {items.length === 0 && (
+              <span className="text-xs text-muted-foreground">No items</span>
+            )}
           </div>
         </CardContent>
-      </BaseNode>
+      </Card>
       <Handle type="source" position={Position.Right} />
     </>
   )
@@ -220,9 +183,7 @@ export function EndNode({ data, selected }: NodeProps) {
 
 // Export all node types
 export const FlowNodeTypes = {
-  content: ContentNode,
-  assessment: AssessmentNode,
-  info: InfoNode,
+  stage: StageNode,
   start: StartNode,
   end: EndNode,
 }

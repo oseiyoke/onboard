@@ -7,13 +7,14 @@ interface Params {
   id: string
 }
 
-export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAuth(request)
+export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAuth(request)
+  const { id } = await params
   
   const url = new URL(request.url)
   const includeQuestions = url.searchParams.get('includeQuestions') === 'true'
   
-  const assessment = await assessmentService.getAssessmentById(params.id, includeQuestions)
+  const assessment = await assessmentService.getAssessmentById(id, includeQuestions)
   
   if (!assessment) {
     return createNotFoundResponse('Assessment not found')
@@ -29,13 +30,14 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: { p
   )
 })
 
-export const PATCH = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAdmin(request)
+export const PATCH = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAdmin(request)
+  const { id } = await params
   
   const body = await request.json()
   const data = UpdateAssessmentSchema.parse(body)
   
-  const assessment = await assessmentService.updateAssessment(params.id, data)
+  const assessment = await assessmentService.updateAssessment(id, data)
   
   return createSuccessResponse(
     { assessment },
@@ -47,10 +49,11 @@ export const PATCH = withErrorHandler(async (request: NextRequest, { params }: {
   )
 })
 
-export const DELETE = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAdmin(request)
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAdmin(request)
+  const { id } = await params
   
-  await assessmentService.deleteAssessment(params.id)
+  await assessmentService.deleteAssessment(id)
   
   return createSuccessResponse({ success: true })
 })

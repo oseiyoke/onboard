@@ -1,0 +1,158 @@
+import type { CreateAssessment, CreateQuestion } from '@/lib/services/assessment.service'
+import type { GeneratedQuestion } from '@/lib/api/assessment'
+
+// UI types from the component
+export interface AssessmentData {
+  name: string
+  description: string
+  passingScore: number
+  retryLimit: number
+  timeLimitSeconds?: number
+  randomizeQuestions: boolean
+  randomizeAnswers: boolean
+  showFeedback: boolean
+  showCorrectAnswers: boolean
+}
+
+export interface Question {
+  id: string
+  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay'
+  question: string
+  options: string[]
+  correctAnswer: any
+  explanation: string
+  points: number
+  position: number
+}
+
+/**
+ * Convert UI AssessmentData to API CreateAssessment format
+ */
+export function uiAssessmentToApi(
+  data: AssessmentData, 
+  generationType: 'manual' | 'content' | 'prompt' | 'youtube' = 'manual',
+  generationSource?: { contentId?: string; prompt?: string; youtubeUrl?: string }
+): CreateAssessment {
+  const assessment: CreateAssessment = {
+    name: data.name,
+    description: data.description || undefined,
+    passing_score: data.passingScore,
+    retry_limit: data.retryLimit,
+    time_limit_seconds: data.timeLimitSeconds || undefined,
+    randomize_questions: data.randomizeQuestions,
+    randomize_answers: data.randomizeAnswers,
+    show_feedback: data.showFeedback,
+    show_correct_answers: data.showCorrectAnswers,
+    settings: {}
+  }
+
+  // Add generation source if not manual
+  if (generationType !== 'manual') {
+    assessment.generation_source = {
+      type: generationType,
+      ...(generationSource?.contentId && { content_id: generationSource.contentId }),
+      ...(generationSource?.prompt && { prompt: generationSource.prompt })
+    }
+    assessment.settings = {
+      ai_generated: true,
+      ...(generationSource?.youtubeUrl && { youtube_url: generationSource.youtubeUrl })
+    }
+  } else {
+    assessment.generation_source = { type: 'manual' }
+  }
+
+  return assessment
+}
+
+/**
+ * Convert UI Question to API CreateQuestion format
+ */
+export function uiQuestionToApi(question: Question): CreateQuestion {
+  return {
+    type: question.type as any,
+    question: question.question,
+    options: question.options,
+    correct_answer: question.correctAnswer,
+    explanation: question.explanation || undefined,
+    points: question.points,
+    position: question.position,
+    metadata: {}
+  }
+}
+
+/**
+ * Convert multiple UI Questions to API CreateQuestion format
+ */
+export function uiQuestionsToApi(questions: Question[]): CreateQuestion[] {
+  return questions.map(uiQuestionToApi)
+}
+
+/**
+ * Convert API generated questions to UI Question format
+ */
+export function apiGeneratedQuestionToUi(generatedQuestion: GeneratedQuestion, index: number): Question {
+  return {
+    id: `generated_${Date.now()}_${index}`,
+    type: generatedQuestion.type as any,
+    question: generatedQuestion.question,
+    options: generatedQuestion.options || [],
+    correctAnswer: generatedQuestion.correct_answer,
+    explanation: generatedQuestion.explanation || '',
+    points: 1,
+    position: index
+  }
+}
+
+/**
+ * Convert multiple API generated questions to UI Question format
+ */
+export function apiGeneratedQuestionsToUi(generatedQuestions: GeneratedQuestion[]): Question[] {
+  return generatedQuestions.map(apiGeneratedQuestionToUi)
+}
+
+/**
+ * Create a new empty question with defaults
+ */
+export function createEmptyQuestion(position: number): Question {
+  return {
+    id: `question_${Date.now()}_${position}`,
+    type: 'multiple_choice',
+    question: '',
+    options: ['', '', '', ''],
+    correctAnswer: '',
+    explanation: '',
+    points: 1,
+    position
+  }
+}
+
+/**
+ * Validate that an assessment has all required fields for saving
+ */
+export function validateAssessmentForSave(data: AssessmentData, questions: Question[]): string | null {
+  if (!data.name.trim()) {
+    return 'Assessment name is required'
+  }
+  
+  if (questions.length === 0) {
+    return 'At least one question is required'
+  }
+  
+  for (let i = 0; i < questions.length; i++) {
+    const question = questions[i]
+    if (!question.question.trim()) {
+      return `Question ${i + 1} text is required`
+    }
+    
+    if (question.type !== 'essay' && (!question.correctAnswer || question.correctAnswer === '')) {
+      return `Question ${i + 1} must have a correct answer`
+    }
+    
+    if ((question.type === 'multiple_choice' || question.type === 'multi_select') && 
+        question.options.filter(opt => opt.trim()).length < 2) {
+      return `Question ${i + 1} must have at least 2 answer options`
+    }
+  }
+  
+  return null
+}

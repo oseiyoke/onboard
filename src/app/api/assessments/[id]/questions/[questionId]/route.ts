@@ -8,13 +8,14 @@ interface Params {
   questionId: string
 }
 
-export const PATCH = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAdmin(request)
+export const PATCH = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAdmin(request)
+  const { questionId } = await params
   
   const body = await request.json()
   const data = UpdateQuestionSchema.parse(body)
   
-  const question = await assessmentService.updateQuestion(params.questionId, data)
+  const question = await assessmentService.updateQuestion(questionId, data)
   
   return createSuccessResponse(
     { question },
@@ -26,10 +27,11 @@ export const PATCH = withErrorHandler(async (request: NextRequest, { params }: {
   )
 })
 
-export const DELETE = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAdmin(request)
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAdmin(request)
+  const { questionId } = await params
   
-  await assessmentService.deleteQuestion(params.questionId)
+  await assessmentService.deleteQuestion(questionId)
   
   return createSuccessResponse({ success: true })
 })

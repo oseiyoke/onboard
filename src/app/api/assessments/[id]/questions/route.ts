@@ -7,13 +7,14 @@ interface Params {
   id: string
 }
 
-export const POST = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAdmin(request)
+export const POST = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAdmin(request) // Ensure user is admin
+  const { id } = await params // Await params as required in Next.js 15
   
   const body = await request.json()
   const data = CreateQuestionSchema.parse(body)
   
-  const question = await assessmentService.createQuestion(params.id, data)
+  const question = await assessmentService.createQuestion(id, data)
   
   return createSuccessResponse(
     { question },
@@ -26,8 +27,9 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: { 
   )
 })
 
-export const PATCH = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAdmin(request)
+export const PATCH = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAdmin(request) // Ensure user is admin
+  const { id } = await params // Await params as required in Next.js 15
   
   const body = await request.json()
   const { questionIds } = body
@@ -36,7 +38,7 @@ export const PATCH = withErrorHandler(async (request: NextRequest, { params }: {
     throw new Error('questionIds must be an array')
   }
   
-  await assessmentService.reorderQuestions(params.id, questionIds)
+  await assessmentService.reorderQuestions(id, questionIds)
   
   return createSuccessResponse({ success: true })
 })

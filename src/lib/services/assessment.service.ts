@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 // Schemas
 export const CreateAssessmentSchema = z.object({
+  org_id: z.string().uuid().optional(), // Optional since database will set default
   name: z.string().min(1, 'Assessment name is required').max(255, 'Name too long'),
   description: z.string().optional(),
   passing_score: z.number().min(0).max(100).default(70),
@@ -18,6 +19,7 @@ export const CreateAssessmentSchema = z.object({
     prompt: z.string().optional(),
   }).optional(),
   settings: z.record(z.unknown()).default({}),
+  is_published: z.boolean().optional(),
 })
 
 export const CreateQuestionSchema = z.object({
@@ -192,10 +194,24 @@ export class AssessmentService {
     const validated = CreateAssessmentSchema.parse(data)
 
     const supabase = await createClient()
+    
+    // Get the user's org_id from the database
+    const { data: userData, error: userError } = await supabase
+      .from('onboard_users')
+      .select('org_id')
+      .eq('id', userId)
+      .single()
+
+    if (userError || !userData) {
+      console.error('Failed to get user organization:', userError)
+      throw new Error('Failed to get user organization')
+    }
+
     const { data: assessment, error } = await supabase
       .from('onboard_assessments')
       .insert({
         ...validated,
+        org_id: userData.org_id,
         created_by: userId,
       })
       .select()
@@ -420,7 +436,7 @@ export class AssessmentService {
     return data as AssessmentAttempt[]
   }
 
-  private calculateScore(assessment: any, answers: Record<string, unknown>): {
+  private calculateScore(assessment: AssessmentWithQuestions, answers: Record<string, unknown>): {
     score: number
     maxScore: number
     isPassed: boolean

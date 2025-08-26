@@ -3,8 +3,8 @@ import { withErrorHandler, createSuccessResponse } from '@/lib/api/errors'
 import { createClient } from '@/utils/supabase/server'
 import { generateDownloadUrl } from '@/lib/r2-storage'
 
-export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
-  const contentId = params.id
+export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  const { id: contentId } = await params // Await params as required in Next.js 15
 
   const supabase = await createClient()
   const { data: content, error } = await supabase

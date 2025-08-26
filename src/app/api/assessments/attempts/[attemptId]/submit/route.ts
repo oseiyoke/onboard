@@ -7,13 +7,14 @@ interface Params {
   attemptId: string
 }
 
-export const POST = withErrorHandler(async (request: NextRequest, { params }: { params: Params }) => {
-  const user = await requireAuth(request)
+export const POST = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  await requireAuth(request) // Ensure user is authenticated
+  const { attemptId } = await params // Await params as required in Next.js 15
   
   const body = await request.json()
   const data = SubmitAttemptSchema.parse(body)
   
-  const attempt = await assessmentService.submitAttempt(params.attemptId, data)
+  const attempt = await assessmentService.submitAttempt(attemptId, data)
   
   return createSuccessResponse(
     { attempt },

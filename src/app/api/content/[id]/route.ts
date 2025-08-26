@@ -3,10 +3,11 @@ import { contentService, UpdateContentSchema } from '@/lib/services/content.serv
 import { requireAuth, requireAdmin } from '@/lib/auth/server'
 import { withErrorHandler, createSuccessResponse, createErrorResponse } from '@/lib/api/errors'
 
-export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
-  const user = await requireAuth(request)
+export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireAuth(request) // Ensure user is authenticated
+  const { id } = await params // Await params as required in Next.js 15
   
-  const content = await contentService.getContentById(params.id)
+  const content = await contentService.getContentById(id)
   
   if (!content) {
     return createErrorResponse('Content not found', 404)
@@ -22,8 +23,9 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: { p
   )
 })
 
-export const PUT = withErrorHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
-  const user = await requireAdmin(request)
+export const PUT = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireAdmin(request) // Ensure user is admin
+  const { id } = await params // Await params as required in Next.js 15
   
   const body = await request.json()
   
@@ -37,7 +39,7 @@ export const PUT = withErrorHandler(async (request: NextRequest, { params }: { p
   
   const data = UpdateContentSchema.parse(normalizedBody)
   
-  const content = await contentService.updateContent(params.id, data)
+  const content = await contentService.updateContent(id, data)
   
   return createSuccessResponse(
     { content },
@@ -49,10 +51,11 @@ export const PUT = withErrorHandler(async (request: NextRequest, { params }: { p
   )
 })
 
-export const DELETE = withErrorHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
-  const user = await requireAdmin(request)
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  await requireAdmin(request) // Ensure user is admin
+  const { id } = await params // Await params as required in Next.js 15
   
-  await contentService.deleteContent(params.id)
+  await contentService.deleteContent(id)
   
   return createSuccessResponse(
     { message: 'Content deleted successfully' },
