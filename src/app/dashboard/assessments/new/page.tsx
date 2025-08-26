@@ -38,14 +38,14 @@ export default function NewAssessmentPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/assessments">
+      <div className="flex flex-col items-center gap-6">
+        <Link href="/dashboard/assessments" className="self-start">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Assessments
           </Button>
         </Link>
-        <div>
+        <div className="text-center">
           <h1 className="text-2xl font-semibold">Create New Assessment</h1>
           <p className="text-muted-foreground">
             Choose how you'd like to create your assessment
@@ -54,129 +54,77 @@ export default function NewAssessmentPage() {
       </div>
 
       {/* Creation Method Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => setCreationMethod('manual')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                ✏️
+      <div className="max-w-2xl mx-auto">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <div
+            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-violet-50/50 transition-colors"
+            onClick={() => setCreationMethod('manual')}
+          >
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-12 h-12 bg-violet-100 rounded-full flex items-center justify-center group-hover:bg-violet-200/70 transition-colors">
+                <div className="text-lg">✏️</div>
               </div>
-              Manual Creation
-            </CardTitle>
-            <CardDescription>
-              Create questions manually with full control over content and format
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div>• Full control over questions and answers</div>
-              <div>• Multiple question types available</div>
-              <div>• Perfect for custom content</div>
+              <div>
+                <h3 className="font-medium text-sm mb-1">Manual Creation</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Create questions manually with full control over content and format
+                </p>
+              </div>
             </div>
-            <Button className="mt-4 w-full">Start Manual Creation</Button>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => setCreationMethod('content')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5" />
+          <div
+            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-emerald-50/50 transition-colors"
+            onClick={() => setCreationMethod('content')}
+          >
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center group-hover:bg-emerald-200/70 transition-colors">
+                <FileText className="w-5 h-5 text-emerald-600" />
               </div>
-              From Existing Content
-            </CardTitle>
-            <CardDescription>
-              Generate assessment from documents, videos, or files in your content library
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div>• Use PDFs, videos, documents</div>
-              <div>• AI analyzes and creates questions</div>
-              <div>• Review and edit before publishing</div>
+              <div>
+                <h3 className="font-medium text-sm mb-1">From Existing Content</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Generate assessment from documents, videos, or files in your library
+                </p>
+              </div>
             </div>
-            <Button className="mt-4 w-full gap-2">
-              <Wand2 className="w-4 h-4" />
-              Generate from Content
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => setCreationMethod('youtube')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Youtube className="w-5 h-5" />
+          <div
+            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-red-50/50 transition-colors"
+            onClick={() => setCreationMethod('youtube')}
+          >
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center group-hover:bg-red-200/70 transition-colors">
+                <Youtube className="w-5 h-5 text-red-600" />
               </div>
-              From YouTube Video
-            </CardTitle>
-            <CardDescription>
-              Paste a YouTube URL and generate assessment from the video content
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div>• Extract transcript automatically</div>
-              <div>• Generate relevant questions</div>
-              <div>• Great for training videos</div>
+              <div>
+                <h3 className="font-medium text-sm mb-1">From YouTube Video</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Paste a YouTube URL and generate assessment from the video content
+                </p>
+              </div>
             </div>
-            <Button className="mt-4 w-full gap-2">
-              <Wand2 className="w-4 h-4" />
-              Generate from YouTube
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => setCreationMethod('prompt')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <MessageSquare className="w-5 h-5" />
+          <div
+            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-blue-50/50 transition-colors"
+            onClick={() => setCreationMethod('prompt')}
+          >
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200/70 transition-colors">
+                <MessageSquare className="w-5 h-5 text-blue-600" />
               </div>
-              From Description
-            </CardTitle>
-            <CardDescription>
-              Describe what you want to assess and let AI create the questions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div>• Describe your topic or requirements</div>
-              <div>• AI generates targeted questions</div>
-              <div>• Quick and flexible approach</div>
+              <div>
+                <h3 className="font-medium text-sm mb-1">From Description</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Describe what you want to assess and let AI create the questions
+                </p>
+              </div>
             </div>
-            <Button className="mt-4 w-full gap-2">
-              <Wand2 className="w-4 h-4" />
-              Generate from Prompt
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-
-      {/* Info Section */}
-      <Card className="bg-muted/50">
-        <CardHeader>
-          <CardTitle className="text-base">💡 Pro Tips</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <div>• All AI-generated assessments can be reviewed and edited before publishing</div>
-          <div>• You can always add or remove questions after generation</div>
-          <div>• Preview your assessment before making it live</div>
-          <div>• Use different question types to keep assessments engaging</div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
