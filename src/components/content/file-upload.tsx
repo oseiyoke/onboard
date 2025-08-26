@@ -225,8 +225,6 @@ export function FileUpload({
   return (
     <div className="space-y-4">
       {/* Drop Zone */}
-      <Card>
-        <CardContent className="p-6">
           <div
             {...getRootProps()}
             className={cn(
@@ -253,8 +251,6 @@ export function FileUpload({
               Max {formatFileSize(maxSize)} per file, up to {maxFiles} files
             </p>
           </div>
-        </CardContent>
-      </Card>
 
       {/* File List */}
       {hasFiles && (

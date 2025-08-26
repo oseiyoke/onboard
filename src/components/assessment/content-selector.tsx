@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useContent, ContentItem } from '@/hooks/use-content'
 import { Search, File, Video, Image, ExternalLink, Youtube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,18 +9,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
-interface ContentItem {
-  id: string
-  name: string
-  type: 'pdf' | 'video' | 'document' | 'image' | 'other'
-  source: 'upload' | 'youtube' | 'gdrive' | 'external'
-  fileSize?: number
-  duration?: number
-  createdAt: string
-}
-
-// TODO: Fetch content from API
-const mockContent: ContentItem[] = []
+// Fetch content from API using shared hook
+// Server-side filtering (search) is used but we still apply a simple client filter too
 
 interface ContentSelectorProps {
   selectedContentId: string
@@ -29,14 +20,17 @@ interface ContentSelectorProps {
 export function ContentSelector({ selectedContentId, onSelectContent }: ContentSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredContent = mockContent.filter(item =>
+  const { data, isLoading } = useContent({ search: searchQuery || undefined })
+  const content: ContentItem[] = (data?.data as ContentItem[]) ?? []
+
+  const filteredContent = content.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const getContentIcon = (type: string, source: string) => {
     if (source === 'youtube') return <Youtube className="w-4 h-4" />
     if (source === 'external') return <ExternalLink className="w-4 h-4" />
-    
+
     switch (type) {
       case 'pdf':
       case 'document':
@@ -69,11 +63,19 @@ export function ContentSelector({ selectedContentId, onSelectContent }: ContentS
       gdrive: 'secondary',
       external: 'outline'
     } as const
-    
+
     return (
       <Badge variant={variants[source as keyof typeof variants] || 'outline'} className="text-xs">
         {source === 'upload' ? 'Uploaded' : source.charAt(0).toUpperCase() + source.slice(1)}
       </Badge>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+      </div>
     )
   }
 
@@ -94,7 +96,7 @@ export function ContentSelector({ selectedContentId, onSelectContent }: ContentS
       <ScrollArea className="h-64">
         <div className="space-y-2">
           {filteredContent.map((item) => (
-            <Card 
+            <Card
               key={item.id}
               className={`cursor-pointer transition-colors hover:bg-accent ${
                 selectedContentId === item.id ? 'ring-2 ring-primary' : ''
@@ -106,19 +108,19 @@ export function ContentSelector({ selectedContentId, onSelectContent }: ContentS
                   <div className="text-muted-foreground mt-1">
                     {getContentIcon(item.type, item.source)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm line-clamp-1">{item.name}</h4>
-                    
+
                     <div className="flex items-center gap-2 mt-1">
                       {getSourceBadge(item.source)}
-                      
+
                       {item.fileSize && (
                         <span className="text-xs text-muted-foreground">
                           {formatFileSize(item.fileSize)}
                         </span>
                       )}
-                      
+
                       {item.duration && (
                         <span className="text-xs text-muted-foreground">
                           {formatDuration(item.duration)}
@@ -150,7 +152,7 @@ export function ContentSelector({ selectedContentId, onSelectContent }: ContentS
 
       {selectedContentId && (
         <div className="text-sm text-muted-foreground">
-          Selected: {mockContent.find(item => item.id === selectedContentId)?.name}
+          Selected: {content.find(item => item.id === selectedContentId)?.name}
         </div>
       )}
     </div>

@@ -20,7 +20,9 @@ import {
   Eye,
   Youtube,
   ExternalLink,
-  Globe
+  Globe,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -106,10 +108,15 @@ const formatDate = (dateString: string) => {
   })
 }
 
+type SortField = 'name' | 'type' | 'source' | 'created_at'
+type SortDirection = 'asc' | 'desc'
+
 export function ContentLibrary() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<string>('all')
   const [selectedSource, setSelectedSource] = useState<string>('all')
+  const [sortField, setSortField] = useState<SortField>('created_at')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const queryClient = useQueryClient()
 
   // Build query parameters
@@ -140,7 +147,52 @@ export function ContentLibrary() {
 
   // The API returns `{ data: ContentItem[], pagination: {...} }`
   // so we need to access the `data` property rather than `content`.
-  const content = (response?.data as ContentItem[]) || []
+  let content = (response?.data as ContentItem[]) || []
+
+  // Sort content based on current sort field and direction
+  content = [...content].sort((a, b) => {
+    let aValue: string | number
+    let bValue: string | number
+
+    switch (sortField) {
+      case 'name':
+        aValue = a.name.toLowerCase()
+        bValue = b.name.toLowerCase()
+        break
+      case 'type':
+        aValue = a.type
+        bValue = b.type
+        break
+      case 'source':
+        aValue = a.source
+        bValue = b.source
+        break
+      case 'created_at':
+        aValue = new Date(a.created_at).getTime()
+        bValue = new Date(b.created_at).getTime()
+        break
+      default:
+        return 0
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return null
+    return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+  }
 
   // Delete content mutation
   const deleteContentMutation = useMutation({
@@ -191,8 +243,6 @@ export function ContentLibrary() {
   return (
     <div className="space-y-6">
       {/* Search and Filter Bar */}
-      <Card>
-        <CardContent className="p-4">
           <div className="flex gap-4 items-center flex-wrap">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -240,10 +290,8 @@ export function ContentLibrary() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Content Grid */}
+      {/* Content Table */}
       {content.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
@@ -258,121 +306,164 @@ export function ContentLibrary() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {content.map((item) => {
-            const FileIcon = getFileIcon(item.type, item.source)
-            const contentUrl = item.source === 'upload' ? item.file_url : item.external_url
-            
-            return (
-              <Card key={item.id} className="group hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      {item.thumbnail_url ? (
-                        <img
-                          src={item.thumbnail_url}
-                          alt={item.name}
-                          className="w-8 h-8 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                          <FileIcon className="w-4 h-4" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm font-medium">
-                          {item.name}
-                        </CardTitle>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left p-4 font-medium text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        Thumbnail
                       </div>
-                    </div>
+                    </th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">
+                      <button 
+                        className="flex items-center gap-2 hover:text-foreground transition-colors"
+                        onClick={() => handleSort('name')}
+                      >
+                        Name
+                        <SortIcon field="name" />
+                      </button>
+                    </th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">
+                      <button 
+                        className="flex items-center gap-2 hover:text-foreground transition-colors"
+                        onClick={() => handleSort('type')}
+                      >
+                        Type
+                        <SortIcon field="type" />
+                      </button>
+                    </th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">
+                      <button 
+                        className="flex items-center gap-2 hover:text-foreground transition-colors"
+                        onClick={() => handleSort('source')}
+                      >
+                        Source
+                        <SortIcon field="source" />
+                      </button>
+                    </th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">
+                      <button 
+                        className="flex items-center gap-2 hover:text-foreground transition-colors"
+                        onClick={() => handleSort('created_at')}
+                      >
+                        Added
+                        <SortIcon field="created_at" />
+                      </button>
+                    </th>
+                    <th className="text-right p-4 font-medium text-muted-foreground w-16">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {content.map((item) => {
+                    const FileIcon = getFileIcon(item.type, item.source)
+                    const contentUrl = item.source === 'upload' ? item.file_url : item.external_url
                     
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Eye className="w-4 h-4 mr-2" />
-                              Preview
-                            </DropdownMenuItem>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-4xl max-h-[90vh]">
-                            <ContentViewer content={item} />
-                          </DialogContent>
-                        </Dialog>
-                        
-                        {contentUrl && (
-                          <DropdownMenuItem asChild>
-                            <a href={contentUrl} download target="_blank" rel="noopener noreferrer">
-                              {item.source === 'upload' ? (
-                                <>
-                                  <Download className="w-4 h-4 mr-2" />
-                                  Download
-                                </>
-                              ) : (
-                                <>
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  Open Link
-                                </>
+                    return (
+                      <tr key={item.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center justify-center w-12 h-12">
+                            {item.thumbnail_url ? (
+                              <img
+                                src={item.thumbnail_url}
+                                alt={item.name}
+                                className="w-10 h-10 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                                <FileIcon className="w-5 h-5 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="font-medium text-foreground truncate max-w-xs" title={item.name}>
+                            {item.name}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="secondary" className={getFileTypeColor(item.type, item.source)}>
+                            {item.type.toUpperCase()}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="outline">
+                            {getSourceLabel(item.source)}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-sm text-muted-foreground">
+                            {formatDate(item.created_at)}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    Preview
+                                  </DropdownMenuItem>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+                                  <ContentViewer content={item} />
+                                </DialogContent>
+                              </Dialog>
+                              
+                              {contentUrl && (
+                                <DropdownMenuItem asChild>
+                                  <a href={contentUrl} download target="_blank" rel="noopener noreferrer">
+                                    {item.source === 'upload' ? (
+                                      <>
+                                        <Download className="w-4 h-4 mr-2" />
+                                        Download
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ExternalLink className="w-4 h-4 mr-2" />
+                                        Open Link
+                                      </>
+                                    )}
+                                  </a>
+                                </DropdownMenuItem>
                               )}
-                            </a>
-                          </DropdownMenuItem>
-                        )}
-                        
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Rename
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuSeparator />
-                        
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => deleteContentMutation.mutate(item.id)}
-                          disabled={deleteContentMutation.isPending}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="secondary" className={getFileTypeColor(item.type, item.source)}>
-                        {item.source === 'upload' ? item.type.toUpperCase() : getSourceLabel(item.source)}
-                      </Badge>
-                      {item.file_size && (
-                        <span className="text-xs text-muted-foreground">
-                          {formatFileSize(item.file_size)}
-                        </span>
-                      )}
-                      {item.duration && (
-                        <span className="text-xs text-muted-foreground">
-                          {Math.floor(item.duration / 60)}:{(item.duration % 60).toString().padStart(2, '0')}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex justify-between items-center text-xs text-muted-foreground">
-                      <span>Added {formatDate(item.created_at)}</span>
-                      {item.view_count > 0 && (
-                        <span>{item.view_count} views</span>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                              
+                              <DropdownMenuItem>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Rename
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => deleteContentMutation.mutate(item.id)}
+                                disabled={deleteContentMutation.isPending}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
