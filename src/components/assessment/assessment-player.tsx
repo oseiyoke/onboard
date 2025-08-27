@@ -76,10 +76,28 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
     return () => clearInterval(timer)
   }, [timeLeft])
 
-  const currentQuestion = assessment.questions[currentQuestionIndex]
-  const progress = ((currentQuestionIndex + 1) / assessment.questions.length) * 100
-  const isLastQuestion = currentQuestionIndex === assessment.questions.length - 1
+  const questions = assessment.questions || []
+  const currentQuestion = questions[currentQuestionIndex]
+  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0
+  const isLastQuestion = currentQuestionIndex === questions.length - 1
   const isFirstQuestion = currentQuestionIndex === 0
+
+  // Handle case where there are no questions
+  if (questions.length === 0) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Assessment Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">This assessment has no questions configured.</p>
+          <Button onClick={onCancel} className="mt-4">
+            Return to Assessment
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const handleAnswerChange = (questionId: string, answer: any) => {
     setAnswers(prev => ({
@@ -207,7 +225,7 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
   }
 
   const getAnsweredQuestions = () => {
-    return assessment.questions.filter(q => 
+    return questions.filter(q => 
       answers[q.id] !== undefined && answers[q.id] !== null && answers[q.id] !== ''
     ).length
   }
@@ -258,7 +276,7 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
                 </div>
               )}
               <Badge variant="outline">
-                {getAnsweredQuestions()} / {assessment.questions.length}
+                {getAnsweredQuestions()} / {questions.length}
               </Badge>
             </div>
           </div>
@@ -266,7 +284,7 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
         <CardContent>
           <Progress value={progress} className="w-full" />
           <div className="flex justify-between text-sm text-muted-foreground mt-2">
-            <span>Question {currentQuestionIndex + 1} of {assessment.questions.length}</span>
+            <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
             <span>{Math.round(progress)}% Complete</span>
           </div>
         </CardContent>
@@ -345,13 +363,13 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-10 gap-2">
-            {assessment.questions.map((_, index) => (
+            {questions.map((_, index) => (
               <Button
                 key={index}
                 variant={index === currentQuestionIndex ? "default" : "outline"}
                 size="sm"
                 className={`aspect-square p-0 ${
-                  answers[assessment.questions[index].id] !== undefined ? 
+                  answers[questions[index].id] !== undefined ? 
                     'bg-green-100 border-green-300' : 
                     ''
                 }`}

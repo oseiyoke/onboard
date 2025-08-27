@@ -7,6 +7,23 @@ interface Params {
   id: string
 }
 
+export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
+  const user = await requireAuth(request)
+  const { id } = await params
+  
+  // Get user's attempts for this assessment
+  const attempts = await assessmentService.getAttemptsByUser(user.id, id)
+  
+  return createSuccessResponse(
+    { attempts },
+    {
+      headers: {
+        'Cache-Control': 'private, max-age=60, stale-while-revalidate=300',
+      },
+    }
+  )
+})
+
 export const POST = withErrorHandler(async (request: NextRequest, { params }: { params: Promise<Params> }) => {
   const user = await requireAuth(request)
   const { id } = await params
@@ -33,7 +50,7 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: { 
   const attempt = await assessmentService.createAttempt(id, user.id, enrollmentId)
   
   return createSuccessResponse(
-    { attempt },
+    { attemptId: attempt.id },
     { 
       status: 201,
       headers: {

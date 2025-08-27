@@ -137,7 +137,7 @@ export class ClientProgressService {
       },
       body: JSON.stringify({
         enrollment_id: enrollmentId,
-        score: score || null,
+        ...(score !== undefined && { score }),
       }),
     })
 

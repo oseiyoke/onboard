@@ -14,7 +14,7 @@ export const CreateStageItemProgressSchema = z.object({
   user_id: z.string().uuid(),
   enrollment_id: z.string().uuid(),
   stage_item_id: z.string().uuid(),
-  score: z.number().min(0).max(100).optional(),
+  score: z.number().min(0).max(100).nullable().optional(),
   metadata: z.record(z.unknown()).optional(),
 })
 
@@ -431,7 +431,7 @@ export class ProgressService {
       },
       body: JSON.stringify({
         enrollment_id: enrollmentId,
-        score: score || null,
+        ...(score !== undefined && { score }),
       }),
     })
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -12,13 +12,14 @@ import {
   Brain, 
   Info,
   CheckCircle,
-  Clock,
   ArrowRight,
   ArrowLeft,
-  Play
+  ChevronLeft
 } from 'lucide-react'
 import { StageWithItems } from '@/lib/services/stage.service'
 import { UserFlowProgress } from '@/lib/services/progress.client'
+import { ContentViewer } from '@/components/content/content-viewer'
+import { AssessmentPlayer } from '@/components/assessment/assessment-player'
 import { toast } from 'sonner'
 
 interface FlowPlayerProps {
@@ -33,12 +34,48 @@ interface FlowPlayerProps {
 }
 
 export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerProps) {
-  const [currentStageIndex, setCurrentStageIndex] = useState(0)
-  const [activeItemIndex, setActiveItemIndex] = useState(0)
+  // Calculate initial position based on progress for seamless resume
+  const getInitialPosition = () => {
+    for (let stageIndex = 0; stageIndex < stages.length; stageIndex++) {
+      const stage = stages[stageIndex]
+      const stageProgress = progress.stages.find(s => s.stage_id === stage.id)
+      
+      if (!stageProgress?.started_at) {
+        // Stage not started - start here
+        return { stageIndex, itemIndex: 0 }
+      }
+      
+      if (stageProgress.completed_at) {
+        // Stage completed - continue to next stage
+        continue
+      }
+      
+      // Stage started but not completed - find first incomplete item
+      for (let itemIndex = 0; itemIndex < stage.items.length; itemIndex++) {
+        const item = stage.items[itemIndex]
+        const itemCompleted = stageProgress.items.find(i => i.item_id === item.id)?.completed_at
+        
+        if (!itemCompleted) {
+          return { stageIndex, itemIndex }
+        }
+      }
+      
+      // All items completed but stage not marked complete - stay at last item
+      return { stageIndex, itemIndex: Math.max(0, stage.items.length - 1) }
+    }
+    
+    // All stages completed - go to last stage, last item
+    const lastStageIndex = Math.max(0, stages.length - 1)
+    const lastItemIndex = Math.max(0, stages[lastStageIndex]?.items.length - 1 || 0)
+    return { stageIndex: lastStageIndex, itemIndex: lastItemIndex }
+  }
+
+  const initialPosition = getInitialPosition()
+  const [currentStageIndex, setCurrentStageIndex] = useState(initialPosition.stageIndex)
+  const [activeItemIndex, setActiveItemIndex] = useState(initialPosition.itemIndex)
   
   const currentStage = stages[currentStageIndex]
   const currentStageProgress = progress.stages.find(s => s.stage_id === currentStage?.id)
-  const currentItem = currentStage?.items[activeItemIndex]
 
   // Calculate overall progress
   const totalItems = stages.reduce((acc, stage) => acc + stage.items.length, 0)
@@ -47,6 +84,48 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
     0
   )
   const overallProgress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape to exit
+      if (e.key === 'Escape') {
+        if (confirm('Are you sure you want to exit? Your progress has been saved.')) {
+          window.location.href = '/dashboard'
+        }
+        return
+      }
+      
+      // Arrow keys for navigation (only if not in input/textarea)
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return
+      }
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        // Go to previous item/stage
+        if (activeItemIndex > 0) {
+          setActiveItemIndex(activeItemIndex - 1)
+        } else if (currentStageIndex > 0) {
+          setCurrentStageIndex(currentStageIndex - 1)
+          setActiveItemIndex(stages[currentStageIndex - 1].items.length - 1)
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        // Go to next item/stage
+        if (activeItemIndex < currentStage.items.length - 1) {
+          setActiveItemIndex(activeItemIndex + 1)
+        } else if (currentStageIndex < stages.length - 1) {
+          setCurrentStageIndex(currentStageIndex + 1)
+          setActiveItemIndex(0)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentStageIndex, activeItemIndex, stages, currentStage])
 
   const handleCompleteItem = async (itemId: string, score?: number) => {
     try {
@@ -57,7 +136,7 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
         },
         body: JSON.stringify({
           enrollment_id: enrollmentId,
-          score: score || null,
+          ...(score !== undefined && { score }),
         }),
       })
 
@@ -75,8 +154,9 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
         setActiveItemIndex(0)
       }
       
-      // Refresh the page to update progress
-      window.location.reload()
+      // For now, still refresh to get updated progress
+      // TODO: Implement optimistic updates in the future
+      setTimeout(() => window.location.reload(), 500)
     } catch (error) {
       toast.error('Failed to complete item')
       console.error(error)
@@ -141,8 +221,48 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
   }
 
   return (
-    <div className="h-screen flex bg-background">
-      {/* Left Sidebar - Stage Navigation */}
+    <div className="min-h-screen bg-background">
+      {/* Navigation Header */}
+      <div className="border-b bg-card px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                // Simple exit for now - could add confirmation dialog later
+                window.location.href = '/dashboard'
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Exit Learning
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Dashboard / Learn / {flow.name}
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Keyboard shortcuts hint */}
+            <div className="text-xs text-muted-foreground hidden sm:block">
+              <kbd className="px-1 py-0.5 bg-muted rounded text-xs">←→</kbd> Navigate • <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Esc</kbd> Exit
+            </div>
+            {/* Progress indicator */}
+            <div className="text-sm text-muted-foreground">
+              {completedItems} of {totalItems} items completed
+            </div>
+            <Badge variant="outline" className="gap-2">
+              <CheckCircle className="w-3 h-3" />
+              {Math.round(overallProgress)}%
+            </Badge>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex">
+        {/* Left Sidebar - Stage Navigation */}
       <div className="w-80 border-r bg-card">
         <div className="p-4 border-b">
           <h1 className="font-semibold text-lg truncate">{flow.name}</h1>
@@ -159,7 +279,6 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
             const stageProgress = progress.stages.find(s => s.stage_id === stage.id)
             const isCurrentStage = index === currentStageIndex
             const isCompleted = stageProgress?.completed_at
-            const isStarted = stageProgress?.started_at
             const itemsCompleted = stageProgress?.items.filter(i => i.completed_at).length || 0
             
             return (
@@ -257,7 +376,7 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
                   <Info className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No Content</h3>
                   <p className="text-muted-foreground">
-                    This stage doesn't have any content yet.
+                    This stage doesn&apos;t have any content yet.
                   </p>
                 </CardContent>
               </Card>
@@ -285,6 +404,7 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
                     item={item} 
                     onComplete={(score) => handleCompleteItem(item.id, score)}
                     isCompleted={!!isItemCompleted(item.id)}
+                    enrollmentId={enrollmentId}
                   />
                 </TabsContent>
               ))}
@@ -329,7 +449,308 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
           </Button>
         </div>
       </div>
+      </div>
     </div>
+  )
+}
+
+// Content fetcher component for content items
+function ContentItemRenderer({ 
+  contentId, 
+  onComplete, 
+  isCompleted 
+}: { 
+  contentId: string
+  onComplete: (score?: number) => void
+  isCompleted: boolean 
+}) {
+  const [content, setContent] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchContent() {
+      try {
+        const response = await fetch(`/api/content/${contentId}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch content')
+        }
+        const data = await response.json()
+        setContent(data.content)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchContent()
+  }, [contentId])
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-muted-foreground mt-2">Loading content...</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error || !content) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <p className="text-destructive">Failed to load content</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <ContentViewer content={content} />
+        <Separator className="my-4" />
+        <div className="flex justify-end">
+          {!isCompleted ? (
+            <Button onClick={() => onComplete()}>
+              Mark as Complete
+            </Button>
+          ) : (
+            <Badge variant="secondary" className="gap-2">
+              <CheckCircle className="w-3 h-3" />
+              Completed
+            </Badge>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Assessment fetcher component for assessment items
+function AssessmentItemRenderer({ 
+  assessmentId, 
+  enrollmentId,
+  onComplete, 
+  isCompleted 
+}: { 
+  assessmentId: string
+  enrollmentId: string
+  onComplete: (score?: number) => void
+  isCompleted: boolean 
+}) {
+  const [assessment, setAssessment] = useState<any>(null)
+  const [attemptId, setAttemptId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showPlayer, setShowPlayer] = useState(false)
+  const [lastResult, setLastResult] = useState<any>(null)
+
+  useEffect(() => {
+    async function fetchAssessment() {
+      try {
+        const response = await fetch(`/api/assessments/${assessmentId}?includeQuestions=true`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch assessment')
+        }
+        const data = await response.json()
+        setAssessment(data.assessment)
+        
+        // Also check if there are previous attempts
+        const attemptsResponse = await fetch(`/api/assessments/${assessmentId}/attempts`)
+        if (attemptsResponse.ok) {
+          const attemptsData = await attemptsResponse.json()
+          if (attemptsData.attempts && attemptsData.attempts.length > 0) {
+            const lastAttempt = attemptsData.attempts[0] // Most recent attempt
+            if (lastAttempt.completed_at) {
+              setLastResult(lastAttempt)
+            }
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchAssessment()
+  }, [assessmentId])
+
+  const handleStartAssessment = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/assessments/${assessmentId}/attempts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          enrollmentId
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to create assessment attempt')
+      }
+      
+      const data = await response.json()
+      setAttemptId(data.attemptId)
+      setShowPlayer(true)
+    } catch (err) {
+      toast.error('Failed to start assessment')
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAssessmentComplete = async (answers: Record<string, any>, timeSpent: number) => {
+    try {
+      const response = await fetch(`/api/assessments/${assessmentId}/attempts/${attemptId}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          answers,
+          timeSpent
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit assessment')
+      }
+
+      const result = await response.json()
+      setLastResult(result.attempt)
+      setShowPlayer(false)
+      
+      // Calculate score as percentage
+      const score = (result.attempt.score / result.attempt.total_points) * 100
+      const passed = score >= assessment.passing_score
+      
+      if (passed) {
+        toast.success(`Assessment completed! Score: ${Math.round(score)}%`)
+        onComplete(score)
+      } else {
+        toast.error(`Assessment failed. Score: ${Math.round(score)}%. Passing score: ${assessment.passing_score}%`)
+      }
+    } catch (error) {
+      toast.error('Failed to submit assessment')
+      console.error(error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-muted-foreground mt-2">Loading assessment...</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error || !assessment) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <p className="text-destructive">Failed to load assessment</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (showPlayer && attemptId) {
+    return (
+      <AssessmentPlayer 
+        assessment={assessment}
+        attemptId={attemptId}
+        onComplete={handleAssessmentComplete}
+        onCancel={() => setShowPlayer(false)}
+      />
+    )
+  }
+
+  // Show assessment overview
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Brain className="w-5 h-5" />
+          {assessment.name}
+        </CardTitle>
+        {assessment.description && (
+          <p className="text-muted-foreground">{assessment.description}</p>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-muted-foreground">Questions:</span>
+            <span className="ml-2 font-medium">{assessment.questions?.length || 0}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Passing Score:</span>
+            <span className="ml-2 font-medium">{assessment.passing_score}%</span>
+          </div>
+          {assessment.time_limit_seconds && (
+            <div>
+              <span className="text-muted-foreground">Time Limit:</span>
+              <span className="ml-2 font-medium">{Math.floor(assessment.time_limit_seconds / 60)} minutes</span>
+            </div>
+          )}
+          <div>
+            <span className="text-muted-foreground">Retries:</span>
+            <span className="ml-2 font-medium">{assessment.retry_limit || 'Unlimited'}</span>
+          </div>
+        </div>
+
+        {lastResult && (
+          <div className="border rounded-lg p-4 bg-muted/50">
+            <h4 className="font-medium mb-2">Previous Result</h4>
+            <div className="text-sm space-y-1">
+              <div>
+                Score: <span className="font-medium">
+                  {Math.round((lastResult.score / lastResult.total_points) * 100)}%
+                </span>
+              </div>
+              <div className={`text-sm ${
+                (lastResult.score / lastResult.total_points) * 100 >= assessment.passing_score 
+                  ? 'text-green-600' 
+                  : 'text-red-600'
+              }`}>
+                {(lastResult.score / lastResult.total_points) * 100 >= assessment.passing_score 
+                  ? 'Passed' 
+                  : 'Failed'}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Separator />
+        <div className="flex justify-end">
+          {isCompleted ? (
+            <Badge variant="secondary" className="gap-2">
+              <CheckCircle className="w-3 h-3" />
+              Completed
+            </Badge>
+          ) : (
+            <Button onClick={handleStartAssessment} className="gap-2">
+              <Brain className="w-4 h-4" />
+              {lastResult ? 'Retake Assessment' : 'Start Assessment'}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -337,11 +758,13 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
 function ItemContent({ 
   item, 
   onComplete, 
-  isCompleted 
+  isCompleted,
+  enrollmentId
 }: { 
   item: any
   onComplete: (score?: number) => void
   isCompleted: boolean 
+  enrollmentId: string
 }) {
   if (item.type === 'info') {
     return (
@@ -375,6 +798,18 @@ function ItemContent({
   }
 
   if (item.type === 'content') {
+    // If we have a content_id, use the ContentItemRenderer
+    if (item.content_id) {
+      return (
+        <ContentItemRenderer 
+          contentId={item.content_id}
+          onComplete={onComplete}
+          isCompleted={isCompleted}
+        />
+      )
+    }
+    
+    // Fallback for content items without content_id
     return (
       <Card>
         <CardHeader>
@@ -387,10 +822,10 @@ function ItemContent({
           <div className="text-center py-8">
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              Content viewer will be implemented here.
+              No content linked to this item.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              This will integrate with the existing ContentViewer component.
+              Please configure content in the admin panel.
             </p>
           </div>
           <Separator className="my-4" />
@@ -412,6 +847,19 @@ function ItemContent({
   }
 
   if (item.type === 'assessment') {
+    // If we have an assessment_id, use the AssessmentItemRenderer
+    if (item.assessment_id) {
+      return (
+        <AssessmentItemRenderer 
+          assessmentId={item.assessment_id}
+          enrollmentId={enrollmentId}
+          onComplete={onComplete}
+          isCompleted={isCompleted}
+        />
+      )
+    }
+    
+    // Fallback for assessment items without assessment_id
     return (
       <Card>
         <CardHeader>
@@ -424,17 +872,17 @@ function ItemContent({
           <div className="text-center py-8">
             <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              Assessment player will be implemented here.
+              No assessment linked to this item.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              This will integrate with the existing AssessmentPlayer component.
+              Please configure assessment in the admin panel.
             </p>
           </div>
           <Separator className="my-4" />
           <div className="flex justify-end">
             {!isCompleted ? (
-              <Button onClick={() => onComplete(85)}>
-                Complete Assessment
+              <Button onClick={() => onComplete()}>
+                Mark as Complete
               </Button>
             ) : (
               <Badge variant="secondary" className="gap-2">

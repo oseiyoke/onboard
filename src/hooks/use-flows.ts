@@ -50,7 +50,7 @@ export function useFlowNavigation() {
 
   const launchFlow = (enrollment: ParticipantEnrollment) => {
     // Navigate to learn flow page with enrollment ID
-    const url = `/learn/flows/${enrollment.flow_id}?enrollment=${enrollment.id}`
+    const url = `/dashboard/learn/flows/${enrollment.flow_id}?enrollment=${enrollment.id}`
     window.location.href = url
   }
 
@@ -69,7 +69,7 @@ export function useFlowNavigation() {
     }
     
     // Navigate to learn flow page with enrollment ID
-    const url = `/learn/flows/${flowPreview.flow.id}?enrollment=${enrollmentId}`
+    const url = `/dashboard/learn/flows/${flowPreview.flow.id}?enrollment=${enrollmentId}`
     window.location.href = url
   }
 

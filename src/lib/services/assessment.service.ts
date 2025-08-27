@@ -199,7 +199,6 @@ export class AssessmentService {
       .from('onboard_assessments')
       .select('*')
       .eq('id', assessmentId)
-
     if (includeQuestions) {
       query = supabase
         .from('onboard_assessments')

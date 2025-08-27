@@ -19,7 +19,8 @@ import {
   ChevronUp,
   ChevronDown,
   Edit,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -80,7 +81,7 @@ export function StageItemManager({ stage, onUpdateStage }: StageItemManagerProps
 
     return (
       <div className="space-y-2">
-        <Label>Select Content (optional)</Label>
+        <Label>Select Content <span className="text-red-500">*</span></Label>
         <Select 
           value={newItem.contentId || 'none'} 
           onValueChange={(value) => setNewItem(prev => ({ ...prev, contentId: value === 'none' ? undefined : value }))}
@@ -113,7 +114,7 @@ export function StageItemManager({ stage, onUpdateStage }: StageItemManagerProps
 
     return (
       <div className="space-y-2">
-        <Label>Select Assessment (optional)</Label>
+        <Label>Select Assessment <span className="text-red-500">*</span></Label>
         <Select 
           value={newItem.assessmentId || 'none'} 
           onValueChange={(value) => setNewItem(prev => ({ ...prev, assessmentId: value === 'none' ? undefined : value }))}
@@ -140,8 +141,25 @@ export function StageItemManager({ stage, onUpdateStage }: StageItemManagerProps
   }
 
   const handleAddItem = async () => {
+    // Basic title validation
     if (!newItem.title.trim()) {
       toast.error('Please enter a title for the item')
+      return
+    }
+
+    // Type-specific validation
+    if (newItem.type === 'content' && !newItem.contentId) {
+      toast.error('Please select content for this content item')
+      return
+    }
+
+    if (newItem.type === 'assessment' && !newItem.assessmentId) {
+      toast.error('Please select an assessment for this assessment item')
+      return
+    }
+
+    if (newItem.type === 'info' && !newItem.body?.trim()) {
+      toast.error('Please enter information content for this info item')
       return
     }
 
@@ -272,6 +290,32 @@ export function StageItemManager({ stage, onUpdateStage }: StageItemManagerProps
     return ITEM_TYPES.find(t => t.value === type) || ITEM_TYPES[0]
   }
 
+  const isItemProperlyConfigured = (item: StageItem) => {
+    switch (item.type) {
+      case 'content':
+        return !!item.content_id
+      case 'assessment':
+        return !!item.assessment_id
+      case 'info':
+        return !!item.body?.trim()
+      default:
+        return true
+    }
+  }
+
+  const getItemConfigurationWarning = (item: StageItem) => {
+    switch (item.type) {
+      case 'content':
+        return !item.content_id ? 'No content linked' : null
+      case 'assessment':
+        return !item.assessment_id ? 'No assessment linked' : null
+      case 'info':
+        return !item.body?.trim() ? 'No content provided' : null
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -303,18 +347,29 @@ export function StageItemManager({ stage, onUpdateStage }: StageItemManagerProps
             const Icon = typeConfig.icon
             const isEditing = editingItem === item.id
 
+            const isConfigured = isItemProperlyConfigured(item)
+            const warning = getItemConfigurationWarning(item)
+
             return (
-              <Card key={item.id} className="relative">
+              <Card key={item.id} className={cn("relative", !isConfigured && "border-yellow-200 bg-yellow-50/50")}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Badge 
-                        variant="outline" 
-                        className={cn("gap-2", typeConfig.color)}
-                      >
-                        <Icon className="w-3 h-3" />
-                        {typeConfig.label}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="outline" 
+                          className={cn("gap-2", typeConfig.color)}
+                        >
+                          <Icon className="w-3 h-3" />
+                          {typeConfig.label}
+                        </Badge>
+                        {!isConfigured && (
+                          <div className="flex items-center gap-1 text-yellow-600" title={warning || undefined}>
+                            <AlertTriangle className="w-3 h-3" />
+                            <span className="text-xs">{warning}</span>
+                          </div>
+                        )}
+                      </div>
                       
                       {isEditing ? (
                         <Input
@@ -445,22 +500,24 @@ export function StageItemManager({ stage, onUpdateStage }: StageItemManagerProps
             </div>
 
             <div className="space-y-2">
-              <Label>Item Title</Label>
+              <Label>Item Title <span className="text-red-500">*</span></Label>
               <Input
                 value={newItem.title}
                 onChange={(e) => setNewItem(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter item title"
+                className={!newItem.title.trim() ? "border-red-200" : ""}
               />
             </div>
 
             {newItem.type === 'info' && (
               <div className="space-y-2">
-                <Label>Content</Label>
+                <Label>Content <span className="text-red-500">*</span></Label>
                 <Textarea
                   value={newItem.body || ''}
                   onChange={(e) => setNewItem(prev => ({ ...prev, body: e.target.value }))}
                   placeholder="Enter the information content"
                   rows={3}
+                  className={!newItem.body?.trim() ? "border-red-200" : ""}
                 />
               </div>
             )}
@@ -472,7 +529,13 @@ export function StageItemManager({ stage, onUpdateStage }: StageItemManagerProps
             <div className="flex gap-2">
               <Button
                 onClick={handleAddItem}
-                disabled={!newItem.title.trim() || isLoading}
+                disabled={
+                  !newItem.title.trim() || 
+                  isLoading ||
+                  (newItem.type === 'content' && !newItem.contentId) ||
+                  (newItem.type === 'assessment' && !newItem.assessmentId) ||
+                  (newItem.type === 'info' && !newItem.body?.trim())
+                }
                 className="gap-2"
               >
                 <Plus className="w-4 h-4" />

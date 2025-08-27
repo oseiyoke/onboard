@@ -38,7 +38,7 @@ export default async function LearnFlowPage({ params, searchParams }: PageProps)
   }
   
   return (
-    <div className="h-screen">
+    <div className="-m-6">
       <FlowPlayer 
         flow={flow}
         stages={stages}
