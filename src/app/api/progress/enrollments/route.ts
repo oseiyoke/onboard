@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server'
 import { requireAuth } from '@/lib/auth/server'
 import { withErrorHandler, createSuccessResponse } from '@/lib/api/errors'
 import { createClient } from '@/utils/supabase/server'
+import { z } from 'zod'
+
+const CreateEnrollmentSchema = z.object({
+  flow_id: z.string().uuid(),
+})
 
 // GET /api/progress/enrollments - Get participant's enrolled flows with progress
 export const GET = withErrorHandler(async (request: NextRequest) => {
@@ -80,5 +85,57 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       },
     }
   )
+})
+
+// POST /api/progress/enrollments - Create enrollment for a flow
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  const user = await requireAuth(request)
+  const supabase = await createClient()
+  
+  const body = await request.json()
+  const { flow_id } = CreateEnrollmentSchema.parse(body)
+  
+  // Verify the flow exists and belongs to the user's org
+  const { data: flow, error: flowError } = await supabase
+    .from('onboard_flows')
+    .select('id')
+    .eq('id', flow_id)
+    .eq('org_id', user.orgId)
+    .single()
+  
+  if (flowError || !flow) {
+    throw new Error('Flow not found or not accessible')
+  }
+  
+  // Check if enrollment already exists
+  const { data: existingEnrollment } = await supabase
+    .from('onboard_enrollments')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('flow_id', flow_id)
+    .single()
+  
+  if (existingEnrollment) {
+    return createSuccessResponse({ enrollment_id: existingEnrollment.id })
+  }
+  
+  // Create new enrollment
+  const { data: enrollment, error: enrollmentError } = await supabase
+    .from('onboard_enrollments')
+    .insert({
+      user_id: user.id,
+      flow_id: flow_id,
+      status: 'active',
+      started_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single()
+  
+  if (enrollmentError || !enrollment) {
+    console.error('Enrollment creation error:', enrollmentError)
+    throw new Error('Failed to create enrollment')
+  }
+  
+  return createSuccessResponse({ enrollment_id: enrollment.id })
 })
 

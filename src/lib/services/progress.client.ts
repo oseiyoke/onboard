@@ -21,6 +21,25 @@ export interface ParticipantEnrollment {
   }
 }
 
+export interface ParticipantFlowPreview {
+  flow: {
+    id: string
+    name: string
+    description: string | null
+  }
+  enrollment: {
+    id: string
+    status: string
+    started_at: string
+    completed_at: string | null
+  } | null
+  progress: {
+    completed_items: number
+    total_items: number
+    percentage: number
+  } | null
+}
+
 export interface UserFlowProgress {
   enrollment_id: string
   flow_id: string
@@ -60,6 +79,38 @@ export class ClientProgressService {
     const data = await response.json()
     // API returns { enrollments: [...] }
     return data.enrollments
+  }
+
+  async getAvailableFlows(): Promise<ParticipantFlowPreview[]> {
+    const response = await fetch('/api/flows/available')
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch available flows')
+    }
+    
+    const data = await response.json()
+    // API returns { flows: [...] }
+    return data.flows
+  }
+
+  async createEnrollment(flowId: string): Promise<string> {
+    const response = await fetch('/api/progress/enrollments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        flow_id: flowId,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to create enrollment')
+    }
+
+    const data = await response.json()
+    // API returns { enrollment_id: "..." }
+    return data.enrollment_id
   }
 
   async startStage(stageId: string, enrollmentId: string): Promise<void> {

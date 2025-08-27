@@ -12,20 +12,22 @@ import {
   ChevronRight,
   Workflow
 } from 'lucide-react'
-import { useParticipantFlows, useFlowNavigation } from '@/hooks/use-flows'
-import { ParticipantEnrollment } from '@/lib/services/progress.client'
+import { useAvailableFlows, useFlowNavigation } from '@/hooks/use-flows'
+import { ParticipantFlowPreview } from '@/lib/services/progress.client'
+import { useState } from 'react'
 
-function FlowCard({ enrollment }: { enrollment: ParticipantEnrollment }) {
-  const { launchFlow, viewFlowDetails } = useFlowNavigation()
+function FlowCard({ flowPreview }: { flowPreview: ParticipantFlowPreview }) {
+  const { launchFlowPreview } = useFlowNavigation()
+  const [isLaunching, setIsLaunching] = useState(false)
 
-  const getStatusBadge = (enrollment: ParticipantEnrollment) => {
-    if (enrollment.completed_at) {
+  const getStatusBadge = (flowPreview: ParticipantFlowPreview) => {
+    if (flowPreview.enrollment?.completed_at) {
       return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
         <CheckCircle className="w-3 h-3 mr-1" />
         Completed
       </Badge>
     }
-    if (enrollment.progress.percentage > 0) {
+    if (flowPreview.progress && flowPreview.progress.percentage > 0) {
       return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
         <Clock className="w-3 h-3 mr-1" />
         In Progress
@@ -37,24 +39,36 @@ function FlowCard({ enrollment }: { enrollment: ParticipantEnrollment }) {
     </Badge>
   }
 
-  const getActionButton = (enrollment: ParticipantEnrollment) => {
-    if (enrollment.completed_at) {
+  const handleLaunch = async () => {
+    setIsLaunching(true)
+    try {
+      await launchFlowPreview(flowPreview)
+    } catch (error) {
+      console.error('Failed to launch flow:', error)
+      setIsLaunching(false)
+    }
+  }
+
+  const getActionButton = (flowPreview: ParticipantFlowPreview) => {
+    if (flowPreview.enrollment?.completed_at) {
       return (
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => launchFlow(enrollment)}
+          onClick={handleLaunch}
+          disabled={isLaunching}
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Review
         </Button>
       )
     }
-    if (enrollment.progress.percentage > 0) {
+    if (flowPreview.progress && flowPreview.progress.percentage > 0) {
       return (
         <Button 
           size="sm"
-          onClick={() => launchFlow(enrollment)}
+          onClick={handleLaunch}
+          disabled={isLaunching}
         >
           <Play className="w-4 h-4 mr-2" />
           Continue
@@ -64,10 +78,11 @@ function FlowCard({ enrollment }: { enrollment: ParticipantEnrollment }) {
     return (
       <Button 
         size="sm"
-        onClick={() => launchFlow(enrollment)}
+        onClick={handleLaunch}
+        disabled={isLaunching}
       >
         <Play className="w-4 h-4 mr-2" />
-        Start
+        {isLaunching ? 'Starting...' : 'Start'}
       </Button>
     )
   }
@@ -77,28 +92,28 @@ function FlowCard({ enrollment }: { enrollment: ParticipantEnrollment }) {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-lg">{enrollment.flow.name}</CardTitle>
-            {enrollment.flow.description && (
+            <CardTitle className="text-lg">{flowPreview.flow.name}</CardTitle>
+            {flowPreview.flow.description && (
               <CardDescription className="line-clamp-2">
-                {enrollment.flow.description}
+                {flowPreview.flow.description}
               </CardDescription>
             )}
           </div>
-          {getStatusBadge(enrollment)}
+          {getStatusBadge(flowPreview)}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium">{enrollment.progress.percentage}%</span>
+            <span className="font-medium">{flowPreview.progress?.percentage || 0}%</span>
           </div>
           <Progress 
-            value={enrollment.progress.percentage} 
+            value={flowPreview.progress?.percentage || 0} 
             className="h-2"
           />
           <div className="text-xs text-muted-foreground">
-            {enrollment.progress.completed_items} of {enrollment.progress.total_items} items completed
+            {flowPreview.progress?.completed_items || 0} of {flowPreview.progress?.total_items || 0} items completed
           </div>
         </div>
 
@@ -106,12 +121,12 @@ function FlowCard({ enrollment }: { enrollment: ParticipantEnrollment }) {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => viewFlowDetails(enrollment)}
+            disabled={!flowPreview.enrollment}
           >
             View Details
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-          {getActionButton(enrollment)}
+          {getActionButton(flowPreview)}
         </div>
       </CardContent>
     </Card>
@@ -173,7 +188,7 @@ function LoadingSkeleton() {
 }
 
 export function ParticipantFlowsList() {
-  const { flows, loading, error, refreshFlows } = useParticipantFlows()
+  const { flows, loading, error, refreshFlows } = useAvailableFlows()
 
   if (loading) {
     return <LoadingSkeleton />
@@ -199,9 +214,9 @@ export function ParticipantFlowsList() {
   }
 
   // Separate flows by status for better organization
-  const inProgressFlows = flows.filter(f => !f.completed_at && f.progress.percentage > 0)
-  const notStartedFlows = flows.filter(f => !f.completed_at && f.progress.percentage === 0)
-  const completedFlows = flows.filter(f => f.completed_at)
+  const inProgressFlows = flows.filter(f => !f.enrollment?.completed_at && f.progress && f.progress.percentage > 0)
+  const notStartedFlows = flows.filter(f => !f.enrollment?.completed_at && (!f.progress || f.progress.percentage === 0))
+  const completedFlows = flows.filter(f => f.enrollment?.completed_at)
 
   return (
     <div className="space-y-8">
@@ -213,8 +228,8 @@ export function ParticipantFlowsList() {
             In Progress ({inProgressFlows.length})
           </h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {inProgressFlows.map((enrollment) => (
-              <FlowCard key={enrollment.id} enrollment={enrollment} />
+            {inProgressFlows.map((flowPreview) => (
+              <FlowCard key={flowPreview.flow.id} flowPreview={flowPreview} />
             ))}
           </div>
         </div>
@@ -228,8 +243,8 @@ export function ParticipantFlowsList() {
             Ready to Start ({notStartedFlows.length})
           </h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {notStartedFlows.map((enrollment) => (
-              <FlowCard key={enrollment.id} enrollment={enrollment} />
+            {notStartedFlows.map((flowPreview) => (
+              <FlowCard key={flowPreview.flow.id} flowPreview={flowPreview} />
             ))}
           </div>
         </div>
@@ -243,8 +258,8 @@ export function ParticipantFlowsList() {
             Completed ({completedFlows.length})
           </h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {completedFlows.map((enrollment) => (
-              <FlowCard key={enrollment.id} enrollment={enrollment} />
+            {completedFlows.map((flowPreview) => (
+              <FlowCard key={flowPreview.flow.id} flowPreview={flowPreview} />
             ))}
           </div>
         </div>

@@ -2,13 +2,33 @@
 
 import { useState } from 'react'
 import useSWR from 'swr'
-import { clientProgressService, ParticipantEnrollment } from '@/lib/services/progress.client'
+import { clientProgressService, ParticipantEnrollment, ParticipantFlowPreview } from '@/lib/services/progress.client'
 
 // Hook for fetching participant enrollments (flows they're enrolled in)
 export function useParticipantFlows() {
   const { data, error, isLoading, mutate } = useSWR(
     'participant-enrollments',
     () => clientProgressService.getParticipantEnrollments(),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      refreshInterval: 30000, // Refresh every 30 seconds
+    }
+  )
+
+  return {
+    flows: data || [],
+    loading: isLoading,
+    error,
+    refreshFlows: mutate,
+  }
+}
+
+// Hook for fetching all available flows (enrolled and not enrolled)
+export function useAvailableFlows() {
+  const { data, error, isLoading, mutate } = useSWR(
+    'available-flows',
+    () => clientProgressService.getAvailableFlows(),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
@@ -34,6 +54,25 @@ export function useFlowNavigation() {
     window.location.href = url
   }
 
+  // New method for launching flows that may not have enrollment yet
+  const launchFlowPreview = async (flowPreview: ParticipantFlowPreview) => {
+    let enrollmentId = flowPreview.enrollment?.id
+    
+    // If no enrollment exists, create one
+    if (!enrollmentId) {
+      try {
+        enrollmentId = await clientProgressService.createEnrollment(flowPreview.flow.id)
+      } catch (error) {
+        console.error('Failed to create enrollment:', error)
+        throw error
+      }
+    }
+    
+    // Navigate to learn flow page with enrollment ID
+    const url = `/learn/flows/${flowPreview.flow.id}?enrollment=${enrollmentId}`
+    window.location.href = url
+  }
+
   const viewFlowDetails = (enrollment: ParticipantEnrollment) => {
     setSelectedFlow(enrollment)
   }
@@ -45,6 +84,7 @@ export function useFlowNavigation() {
   return {
     selectedFlow,
     launchFlow,
+    launchFlowPreview,
     viewFlowDetails,
     closeFlowDetails,
   }
