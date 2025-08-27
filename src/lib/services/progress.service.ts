@@ -1,4 +1,5 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient as createServerClient } from '@/utils/supabase/server'
+import { createClient as createBrowserClient } from '@/utils/supabase/client'
 import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 
@@ -72,12 +73,43 @@ export interface UserFlowProgress {
   }[]
 }
 
+export interface ParticipantEnrollment {
+  id: string
+  flow_id: string
+  flow: {
+    id: string
+    name: string
+    description: string | null
+  }
+  status: string
+  started_at: string
+  completed_at: string | null
+  progress: {
+    completed_items: number
+    total_items: number
+    percentage: number
+  }
+}
+
+// Helper to determine if we're running on the server or client
+function isServer() {
+  return typeof window === 'undefined'
+}
+
+// Helper to get the appropriate Supabase client
+async function getSupabaseClient() {
+  if (isServer()) {
+    return await createServerClient()
+  } else {
+    return createBrowserClient()
+  }
+}
+
 export class ProgressService {
   async getUserFlowProgress(userId: string, enrollmentId: string): Promise<UserFlowProgress | null> {
-    const supabase = await createClient()
+    const supabase = await getSupabaseClient()
     
-    return await unstable_cache(
-      async () => {
+    const fetchProgress = async () => {
         // Get enrollment with flow info
         const { data: enrollment, error: enrollmentError } = await supabase
           .from('onboard_enrollments')
@@ -148,18 +180,26 @@ export class ProgressService {
               }))
           }))
         } as UserFlowProgress
-      },
-      [`progress-${userId}-${enrollmentId}`],
-      {
-        revalidate: 60, // Cache for 1 minute
-        tags: [`user-progress-${userId}`, `enrollment-${enrollmentId}`],
-      }
-    )()
+    }
+
+    // Use caching only on server side
+    if (isServer()) {
+      return await unstable_cache(
+        fetchProgress,
+        [`progress-${userId}-${enrollmentId}`],
+        {
+          revalidate: 60, // Cache for 1 minute
+          tags: [`user-progress-${userId}`, `enrollment-${enrollmentId}`],
+        }
+      )()
+    } else {
+      return await fetchProgress()
+    }
   }
 
   async markStageStarted(data: CreateStageProgress): Promise<StageProgress> {
     const validated = CreateStageProgressSchema.parse(data)
-    const supabase = await createClient()
+    const supabase = await getSupabaseClient()
 
     const { data: progress, error } = await supabase
       .from('onboard_stage_progress')
@@ -182,7 +222,7 @@ export class ProgressService {
   }
 
   async markStageCompleted(userId: string, stageId: string, enrollmentId: string): Promise<StageProgress> {
-    const supabase = await createClient()
+    const supabase = await getSupabaseClient()
 
     const { data: progress, error } = await supabase
       .from('onboard_stage_progress')
@@ -205,7 +245,7 @@ export class ProgressService {
 
   async markStageItemCompleted(data: CreateStageItemProgress): Promise<StageItemProgress> {
     const validated = CreateStageItemProgressSchema.parse(data)
-    const supabase = await createClient()
+    const supabase = await getSupabaseClient()
 
     const { data: progress, error } = await supabase
       .from('onboard_stage_item_progress')
@@ -236,7 +276,7 @@ export class ProgressService {
   }
 
   private async checkAndCompleteStage(userId: string, enrollmentId: string, stageItemId: string): Promise<void> {
-    const supabase = await createClient()
+    const supabase = await getSupabaseClient()
 
     // Get the stage for this item
     const { data: stageItem } = await supabase
@@ -274,7 +314,7 @@ export class ProgressService {
   }
 
   private async checkAndCompleteFlow(userId: string, enrollmentId: string): Promise<void> {
-    const supabase = await createClient()
+    const supabase = await getSupabaseClient()
 
     // Get enrollment to find flow_id
     const { data: enrollment } = await supabase
@@ -319,10 +359,9 @@ export class ProgressService {
     completion_rate: number
     avg_completion_time_hours: number | null
   }> {
-    const supabase = await createClient()
+    const supabase = await getSupabaseClient()
 
-    return await unstable_cache(
-      async () => {
+    const fetchSummary = async () => {
         const { data: summary, error } = await supabase.rpc('get_flow_progress_summary', {
           p_flow_id: flowId
         })
@@ -338,13 +377,79 @@ export class ProgressService {
           completion_rate: 0,
           avg_completion_time_hours: null
         }
+    }
+
+    // Use caching only on server side
+    if (isServer()) {
+      return await unstable_cache(
+        fetchSummary,
+        [`flow-summary-${flowId}`],
+        {
+          revalidate: 300, // Cache for 5 minutes
+          tags: [`flow-${flowId}`, 'flow-progress'],
+        }
+      )()
+    } else {
+      return await fetchSummary()
+    }
+  }
+
+  // Participant-specific methods
+  async getParticipantEnrollments(): Promise<ParticipantEnrollment[]> {
+    const response = await fetch('/api/progress/enrollments')
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch enrollments')
+    }
+    
+    const data = await response.json()
+    // API returns { enrollments: [...] }
+    return data.enrollments
+  }
+
+  async startStage(stageId: string, enrollmentId: string): Promise<void> {
+    const response = await fetch(`/api/progress/stages/${stageId}/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      [`flow-summary-${flowId}`],
-      {
-        revalidate: 300, // Cache for 5 minutes
-        tags: [`flow-${flowId}`, 'flow-progress'],
-      }
-    )()
+      body: JSON.stringify({
+        enrollment_id: enrollmentId,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to start stage')
+    }
+  }
+
+  async completeStageItem(itemId: string, enrollmentId: string, score?: number): Promise<void> {
+    const response = await fetch(`/api/progress/stage-items/${itemId}/complete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        enrollment_id: enrollmentId,
+        score: score || null,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to complete stage item')
+    }
+  }
+
+  async getEnrollmentProgress(enrollmentId: string): Promise<UserFlowProgress | null> {
+    const response = await fetch(`/api/progress/enrollments/${enrollmentId}`)
+    
+    if (!response.ok) {
+      return null
+    }
+    
+    const data = await response.json()
+    // API returns { progress: {...} }
+    return data.progress
   }
 }
 

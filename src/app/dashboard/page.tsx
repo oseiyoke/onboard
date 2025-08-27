@@ -15,6 +15,9 @@ import {
   CheckCircle
 } from 'lucide-react'
 import { Suspense } from 'react'
+import { ParticipantFlowsList } from '@/components/participant/participant-flows-list'
+import { FlowDetailsDialog } from '@/components/participant/flow-details-dialog'
+import { ParticipantDashboard } from '@/components/participant/participant-dashboard'
 
 // Fetch real stats from the database
 async function getDashboardStats() {
@@ -202,40 +205,7 @@ export default async function DashboardPage() {
   }
 
   // Participant Dashboard
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">My Progress</h1>
-        <p className="text-muted-foreground">
-          Track your onboarding journey
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Onboarding Flow</CardTitle>
-          <CardDescription>
-            Continue where you left off
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">Employee Onboarding</h3>
-              <Badge>In Progress</Badge>
-            </div>
-            <div className="w-full bg-secondary rounded-full h-2">
-              <div className="bg-primary h-2 rounded-full" style={{ width: '60%' }}></div>
-            </div>
-            <p className="text-sm text-muted-foreground">3 of 5 phases completed</p>
-            <Button>
-              Continue Flow
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  return <ParticipantDashboard />
 }
 
 // Server component to fetch stats

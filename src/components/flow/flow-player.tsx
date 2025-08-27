@@ -18,7 +18,7 @@ import {
   Play
 } from 'lucide-react'
 import { StageWithItems } from '@/lib/services/stage.service'
-import { UserFlowProgress } from '@/lib/services/progress.service'
+import { UserFlowProgress } from '@/lib/services/progress.client'
 import { toast } from 'sonner'
 
 interface FlowPlayerProps {
