@@ -57,11 +57,11 @@ export default function NewAssessmentPage() {
       <div className="max-w-2xl mx-auto">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
           <div
-            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-violet-50/50 transition-colors"
+            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-primary/5 transition-colors"
             onClick={() => setCreationMethod('manual')}
           >
             <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-12 h-12 bg-violet-100 rounded-full flex items-center justify-center group-hover:bg-violet-200/70 transition-colors">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/15 transition-colors">
                 <div className="text-lg">✏️</div>
               </div>
               <div>

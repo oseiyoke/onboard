@@ -26,7 +26,7 @@ export function ParticipantDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold" style={{ color: 'hsl(262, 83%, 58%)' }}>
+        <h1 className="text-3xl font-bold text-primary">
           My Learning Journey
         </h1>
         <p className="text-muted-foreground">

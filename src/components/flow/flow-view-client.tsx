@@ -138,8 +138,8 @@ export function FlowViewClient({ flow, stages }: FlowViewClientProps) {
                     <Card>
                       <CardContent className="p-6">
                         <div className="flex items-center gap-4">
-                          <div className="p-2 bg-purple-100 rounded-lg dark:bg-purple-900/20">
-                            <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                          <div className="p-2 bg-primary/10 rounded-lg dark:bg-primary/20">
+                            <Users className="h-6 w-6 text-primary dark:text-primary" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-muted-foreground">Status</p>

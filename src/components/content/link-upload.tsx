@@ -122,7 +122,7 @@ export function LinkUpload({ onUploadComplete }: LinkUploadProps) {
       return response.json()
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['content'] })
+      queryClient.invalidateQueries({ queryKey: ['content'], exact: false })
       setStep('success')
       if (onUploadComplete) {
         onUploadComplete(data.content)

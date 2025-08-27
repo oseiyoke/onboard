@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { useCompletionStatus } from '@/hooks/use-completion-status'
 import { 
   LayoutDashboard, 
   Users, 
@@ -12,7 +13,8 @@ import {
   BarChart3,
   Workflow,
   Upload,
-  Brain
+  Brain,
+  Award
 } from 'lucide-react'
 
 const adminNavItems = [
@@ -65,9 +67,10 @@ const participantNavItems = [
     icon: Workflow,
   },
   {
-    name: 'Resources',
-    href: '/dashboard/resources',
-    icon: FileText,
+    name: 'Certificates',
+    href: '/dashboard/certificate',
+    icon: Award,
+    requiresCompletion: true,
   },
 ]
 
@@ -77,6 +80,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
   const pathname = usePathname()
+  const completionStatus = useCompletionStatus()
   
   const navItems = userRole === 'admin' ? adminNavItems : participantNavItems
 
@@ -94,6 +98,31 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
       <nav className="p-4 space-y-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href
+          const isDisabled = userRole === 'participant' && 
+            item.requiresCompletion && 
+            !completionStatus.hasCompletedFlows
+          
+          if (isDisabled) {
+            return (
+              <Button
+                key={item.name}
+                variant="ghost"
+                className={cn(
+                  'w-full justify-start gap-3 opacity-50 cursor-not-allowed'
+                )}
+                disabled
+              >
+                <item.icon className="w-4 h-4" />
+                {item.name}
+                {item.requiresCompletion && (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    Complete a flow
+                  </span>
+                )}
+              </Button>
+            )
+          }
+          
           return (
             <Button
               key={item.name}

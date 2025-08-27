@@ -222,7 +222,7 @@ export type Database = {
     }
     Enums: {
       user_role: 'admin' | 'participant'
-      content_type: 'pdf' | 'video' | 'document' | 'image'
+      content_type: 'pdf' | 'video' | 'document' | 'image' | 'other'
     }
   }
 }

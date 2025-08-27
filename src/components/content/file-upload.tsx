@@ -202,7 +202,7 @@ export function FileUpload({
           onUploadComplete(successfulUploads)
         }
         // Invalidate content queries so the library refreshes
-        queryClient.invalidateQueries({ queryKey: ['content'] })
+        queryClient.invalidateQueries({ queryKey: ['content'], exact: false })
       }
     } catch (error) {
       console.error('Batch upload error:', error)

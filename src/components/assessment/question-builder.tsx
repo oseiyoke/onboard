@@ -105,11 +105,19 @@ export function QuestionBuilder({ questions, onChange, onNext }: QuestionBuilder
               <SelectValue placeholder="Select correct answer" />
             </SelectTrigger>
             <SelectContent>
-              {question.options.map((option, index) => (
-                <SelectItem key={index} value={option}>
-                  {option || `Option ${index + 1}`}
+              {question.options.filter(option => option.trim() !== '').length === 0 ? (
+                <SelectItem value="no_options" disabled>
+                  Add options first
                 </SelectItem>
-              ))}
+              ) : (
+                question.options
+                  .filter(option => option.trim() !== '')
+                  .map((option, index) => (
+                    <SelectItem key={index} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))
+              )}
             </SelectContent>
           </Select>
         )
@@ -118,21 +126,27 @@ export function QuestionBuilder({ questions, onChange, onNext }: QuestionBuilder
         return (
           <div className="space-y-2">
             <Label className="text-sm">Select all correct answers:</Label>
-            {question.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <Switch
-                  checked={(question.correctAnswer || []).includes(option)}
-                  onCheckedChange={(checked) => {
-                    const current = question.correctAnswer || []
-                    const updated = checked
-                      ? [...current, option]
-                      : current.filter((a: string) => a !== option)
-                    updateQuestion(question.id, { correctAnswer: updated })
-                  }}
-                />
-                <Label className="text-sm">{option || `Option ${index + 1}`}</Label>
-              </div>
-            ))}
+            {question.options.filter(option => option.trim() !== '').length === 0 ? (
+              <div className="text-sm text-muted-foreground">Add options first</div>
+            ) : (
+              question.options
+                .filter(option => option.trim() !== '')
+                .map((option, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Switch
+                      checked={(question.correctAnswer || []).includes(option)}
+                      onCheckedChange={(checked) => {
+                        const current = question.correctAnswer || []
+                        const updated = checked
+                          ? [...current, option]
+                          : current.filter((a: string) => a !== option)
+                        updateQuestion(question.id, { correctAnswer: updated })
+                      }}
+                    />
+                    <Label className="text-sm">{option}</Label>
+                  </div>
+                ))
+            )}
           </div>
         )
 

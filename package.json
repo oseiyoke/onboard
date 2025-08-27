@@ -36,6 +36,7 @@
     "@tanstack/react-query-devtools": "^5.85.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.540.0",
     "next": "15.5.0",

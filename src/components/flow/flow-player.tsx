@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
+import { CompletionCelebration } from '@/components/celebration/completion-celebration'
 import { 
   FileText, 
   Brain, 
@@ -34,6 +35,9 @@ interface FlowPlayerProps {
 }
 
 export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerProps) {
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [previousProgress, setPreviousProgress] = useState(0)
+  
   // Calculate initial position based on progress for seamless resume
   const getInitialPosition = () => {
     for (let stageIndex = 0; stageIndex < stages.length; stageIndex++) {
@@ -84,6 +88,14 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
     0
   )
   const overallProgress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
+
+  // Check if flow just completed (reached 100%)
+  useEffect(() => {
+    if (overallProgress >= 100 && previousProgress < 100) {
+      setShowCelebration(true)
+    }
+    setPreviousProgress(overallProgress)
+  }, [overallProgress, previousProgress])
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -189,7 +201,7 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
     if (currentStage && !currentStageProgress?.started_at) {
       handleStartStage(currentStage.id)
     }
-  }, [currentStage?.id])
+  }, [currentStage?.id, currentStageProgress?.started_at])
 
   if (!currentStage) {
     return (
@@ -450,6 +462,17 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
         </div>
       </div>
       </div>
+      
+      {/* Completion Celebration */}
+      <CompletionCelebration
+        flowName={flow.name}
+        show={showCelebration}
+        onViewCertificate={() => {
+          setShowCelebration(false)
+          window.location.href = '/dashboard/certificate'
+        }}
+        onDismiss={() => setShowCelebration(false)}
+      />
     </div>
   )
 }
@@ -464,7 +487,7 @@ function ContentItemRenderer({
   onComplete: (score?: number) => void
   isCompleted: boolean 
 }) {
-  const [content, setContent] = useState<any>(null)
+  const [content, setContent] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -512,7 +535,7 @@ function ContentItemRenderer({
   return (
     <Card>
       <CardContent className="p-6">
-        <ContentViewer content={content} />
+        <ContentViewer content={content as any} />
         <Separator className="my-4" />
         <div className="flex justify-end">
           {!isCompleted ? (
@@ -543,12 +566,12 @@ function AssessmentItemRenderer({
   onComplete: (score?: number) => void
   isCompleted: boolean 
 }) {
-  const [assessment, setAssessment] = useState<any>(null)
+  const [assessment, setAssessment] = useState<unknown>(null)
   const [attemptId, setAttemptId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showPlayer, setShowPlayer] = useState(false)
-  const [lastResult, setLastResult] = useState<any>(null)
+  const [lastResult, setLastResult] = useState<unknown>(null)
 
   useEffect(() => {
     async function fetchAssessment() {
@@ -558,7 +581,7 @@ function AssessmentItemRenderer({
           throw new Error('Failed to fetch assessment')
         }
         const data = await response.json()
-        setAssessment(data.assessment)
+        setAssessment(data.assessment as any)
         
         // Also check if there are previous attempts
         const attemptsResponse = await fetch(`/api/assessments/${assessmentId}/attempts`)
@@ -567,7 +590,7 @@ function AssessmentItemRenderer({
           if (attemptsData.attempts && attemptsData.attempts.length > 0) {
             const lastAttempt = attemptsData.attempts[0] // Most recent attempt
             if (lastAttempt.completed_at) {
-              setLastResult(lastAttempt)
+              setLastResult(lastAttempt as any)
             }
           }
         }
@@ -609,7 +632,7 @@ function AssessmentItemRenderer({
     }
   }
 
-  const handleAssessmentComplete = async (answers: Record<string, any>, timeSpent: number) => {
+  const handleAssessmentComplete = async (answers: Record<string, unknown>, timeSpent: number) => {
     try {
       const response = await fetch(`/api/assessments/${assessmentId}/attempts/${attemptId}/submit`, {
         method: 'POST',
@@ -627,18 +650,18 @@ function AssessmentItemRenderer({
       }
 
       const result = await response.json()
-      setLastResult(result.attempt)
+      setLastResult(result.attempt as any)
       setShowPlayer(false)
       
       // Calculate score as percentage
       const score = (result.attempt.score / result.attempt.total_points) * 100
-      const passed = score >= assessment.passing_score
+      const passed = score >= typedAssessment?.passing_score
       
       if (passed) {
         toast.success(`Assessment completed! Score: ${Math.round(score)}%`)
         onComplete(score)
       } else {
-        toast.error(`Assessment failed. Score: ${Math.round(score)}%. Passing score: ${assessment.passing_score}%`)
+        toast.error(`Assessment failed. Score: ${Math.round(score)}%. Passing score: ${typedAssessment?.passing_score}%`)
       }
     } catch (error) {
       toast.error('Failed to submit assessment')
@@ -668,10 +691,13 @@ function AssessmentItemRenderer({
     )
   }
 
+  const typedAssessment = assessment as any
+  const typedLastResult = lastResult as any
+
   if (showPlayer && attemptId) {
     return (
       <AssessmentPlayer 
-        assessment={assessment}
+        assessment={typedAssessment}
         attemptId={attemptId}
         onComplete={handleAssessmentComplete}
         onCancel={() => setShowPlayer(false)}
@@ -685,49 +711,49 @@ function AssessmentItemRenderer({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="w-5 h-5" />
-          {assessment.name}
+          {typedAssessment?.name}
         </CardTitle>
-        {assessment.description && (
-          <p className="text-muted-foreground">{assessment.description}</p>
+        {typedAssessment?.description && (
+          <p className="text-muted-foreground">{typedAssessment.description}</p>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-muted-foreground">Questions:</span>
-            <span className="ml-2 font-medium">{assessment.questions?.length || 0}</span>
+            <span className="ml-2 font-medium">{typedAssessment?.questions?.length || 0}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Passing Score:</span>
-            <span className="ml-2 font-medium">{assessment.passing_score}%</span>
+            <span className="ml-2 font-medium">{typedAssessment?.passing_score}%</span>
           </div>
-          {assessment.time_limit_seconds && (
+          {typedAssessment?.time_limit_seconds && (
             <div>
               <span className="text-muted-foreground">Time Limit:</span>
-              <span className="ml-2 font-medium">{Math.floor(assessment.time_limit_seconds / 60)} minutes</span>
+              <span className="ml-2 font-medium">{Math.floor(typedAssessment.time_limit_seconds / 60)} minutes</span>
             </div>
           )}
           <div>
             <span className="text-muted-foreground">Retries:</span>
-            <span className="ml-2 font-medium">{assessment.retry_limit || 'Unlimited'}</span>
+            <span className="ml-2 font-medium">{typedAssessment?.retry_limit || 'Unlimited'}</span>
           </div>
         </div>
 
-        {lastResult && (
+        {typedLastResult && (
           <div className="border rounded-lg p-4 bg-muted/50">
             <h4 className="font-medium mb-2">Previous Result</h4>
             <div className="text-sm space-y-1">
               <div>
                 Score: <span className="font-medium">
-                  {Math.round((lastResult.score / lastResult.total_points) * 100)}%
+                  {Math.round((typedLastResult.score / typedLastResult.total_points) * 100)}%
                 </span>
               </div>
               <div className={`text-sm ${
-                (lastResult.score / lastResult.total_points) * 100 >= assessment.passing_score 
+                (typedLastResult.score / typedLastResult.total_points) * 100 >= typedAssessment?.passing_score 
                   ? 'text-green-600' 
                   : 'text-red-600'
               }`}>
-                {(lastResult.score / lastResult.total_points) * 100 >= assessment.passing_score 
+                {(typedLastResult.score / typedLastResult.total_points) * 100 >= typedAssessment?.passing_score 
                   ? 'Passed' 
                   : 'Failed'}
               </div>
@@ -745,7 +771,7 @@ function AssessmentItemRenderer({
           ) : (
             <Button onClick={handleStartAssessment} className="gap-2">
               <Brain className="w-4 h-4" />
-              {lastResult ? 'Retake Assessment' : 'Start Assessment'}
+              {typedLastResult ? 'Retake Assessment' : 'Start Assessment'}
             </Button>
           )}
         </div>
@@ -761,23 +787,31 @@ function ItemContent({
   isCompleted,
   enrollmentId
 }: { 
-  item: any
+  item: unknown
   onComplete: (score?: number) => void
   isCompleted: boolean 
   enrollmentId: string
 }) {
-  if (item.type === 'info') {
+  const typedItem = item as { 
+    type: string; 
+    title: string; 
+    body?: string; 
+    content_id?: string; 
+    assessment_id?: string;
+  }
+  
+  if (typedItem.type === 'info') {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Info className="w-5 h-5" />
-            {item.title}
+            {typedItem.title}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="prose prose-sm max-w-none">
-            <p className="whitespace-pre-wrap">{item.body || 'No content available.'}</p>
+            <p className="whitespace-pre-wrap">{typedItem.body || 'No content available.'}</p>
           </div>
           <Separator className="my-4" />
           <div className="flex justify-end">
@@ -797,12 +831,12 @@ function ItemContent({
     )
   }
 
-  if (item.type === 'content') {
+  if (typedItem.type === 'content') {
     // If we have a content_id, use the ContentItemRenderer
-    if (item.content_id) {
+    if (typedItem.content_id) {
       return (
         <ContentItemRenderer 
-          contentId={item.content_id}
+          contentId={typedItem.content_id}
           onComplete={onComplete}
           isCompleted={isCompleted}
         />
@@ -815,7 +849,7 @@ function ItemContent({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5" />
-            {item.title}
+            {typedItem.title}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -846,12 +880,12 @@ function ItemContent({
     )
   }
 
-  if (item.type === 'assessment') {
+  if (typedItem.type === 'assessment') {
     // If we have an assessment_id, use the AssessmentItemRenderer
-    if (item.assessment_id) {
+    if (typedItem.assessment_id) {
       return (
         <AssessmentItemRenderer 
-          assessmentId={item.assessment_id}
+          assessmentId={typedItem.assessment_id}
           enrollmentId={enrollmentId}
           onComplete={onComplete}
           isCompleted={isCompleted}
@@ -865,7 +899,7 @@ function ItemContent({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5" />
-            {item.title}
+            {typedItem.title}
           </CardTitle>
         </CardHeader>
         <CardContent>

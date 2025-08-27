@@ -76,7 +76,7 @@ function StageCard({ stage, index }: { stage: StageWithItems; index: number }) {
     <Card className="relative overflow-hidden">
       {/* Stage Image */}
       {stage.image_url && (
-        <div className="h-32 bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900 dark:to-violet-800 flex items-center justify-center">
+        <div className="h-32 bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 flex items-center justify-center">
           <img 
             src={stage.image_url} 
             alt={stage.title}
@@ -89,7 +89,7 @@ function StageCard({ stage, index }: { stage: StageWithItems; index: number }) {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300 flex items-center justify-center text-xs font-medium">
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary flex items-center justify-center text-xs font-medium">
                 {index + 1}
               </div>
               <CardTitle className="text-lg">{stage.title}</CardTitle>
@@ -218,8 +218,8 @@ export function StagePreview({ flow, stages }: StagePreviewProps) {
           <div className="relative">
             {/* Start Node */}
             <div className="flex items-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900 dark:to-violet-800 flex items-center justify-center">
-                <Play className="w-6 h-6 text-violet-700 dark:text-violet-300" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 flex items-center justify-center">
+                <Play className="w-6 h-6 text-primary dark:text-primary" />
               </div>
               <div className="ml-4">
                 <div className="font-medium">Start</div>

@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Create custom types
 CREATE TYPE user_role AS ENUM ('admin', 'participant');
-CREATE TYPE content_type AS ENUM ('pdf', 'video', 'document', 'image');
+CREATE TYPE content_type AS ENUM ('pdf', 'video', 'document', 'image', 'other');
 
 -- Organizations table
 CREATE TABLE onboard_organizations (

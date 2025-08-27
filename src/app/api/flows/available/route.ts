@@ -7,7 +7,6 @@ import { createClient } from '@/utils/supabase/server'
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const user = await requireAuth(request)
   const supabase = await createClient()
-  console.log('user', user)
   
   // Get all flows in the user's organization with optional enrollment info
   const { data: flows, error } = await supabase

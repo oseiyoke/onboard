@@ -395,7 +395,7 @@ export function StageBuilder({
                   disabled={!isAccessible}
                   className={cn(
                     'w-full p-3 text-left rounded-lg transition-colors flex items-center gap-3',
-                    isActive && 'bg-violet-50 border border-violet-200 dark:bg-violet-950 dark:border-violet-800',
+                    isActive && 'bg-primary/5 border border-primary/20 dark:bg-primary/10 dark:border-primary/30',
                     !isActive && isAccessible && 'hover:bg-muted/50',
                     !isAccessible && 'opacity-50 cursor-not-allowed'
                   )}
@@ -404,9 +404,9 @@ export function StageBuilder({
                     className={cn(
                       'flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium transition-colors',
                       isCompleted
-                        ? 'bg-violet-600 text-white dark:bg-violet-500'
+                        ? 'bg-primary text-primary-foreground'
                         : isActive
-                        ? 'bg-violet-100 text-violet-700 border border-violet-300 dark:bg-violet-900 dark:text-violet-300 dark:border-violet-700'
+                        ? 'bg-primary/10 text-primary border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/40'
                         : 'bg-muted text-muted-foreground'
                     )}
                   >
@@ -419,7 +419,7 @@ export function StageBuilder({
                   <div className="flex-1 min-w-0">
                     <div className={cn(
                       'font-medium text-sm flex items-center gap-2',
-                      isActive ? 'text-violet-700 dark:text-violet-300' : 'text-foreground'
+                      isActive ? 'text-primary dark:text-primary' : 'text-foreground'
                     )}>
                       {step.title}
                       {step.icon && <span className="text-muted-foreground">{step.icon}</span>}
