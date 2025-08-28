@@ -32,12 +32,14 @@ function StageItemRow({
   stageId, 
   enrollmentId, 
   isSubmitting,
+  submittingItemId,
   onToggleComplete 
 }: {
   item: UserFlowProgress['stages'][0]['items'][0]
   stageId: string
   enrollmentId: string
   isSubmitting: boolean
+  submittingItemId: string | null
   onToggleComplete: (itemId: string, isCompleted: boolean, score?: number) => void
 }) {
   const getItemIcon = (type: string) => {
@@ -51,21 +53,24 @@ function StageItemRow({
 
   const Icon = getItemIcon(item.item_type)
   const isCompleted = !!item.completed_at
+  const isLoading = submittingItemId === item.item_id
 
   return (
     <div className={cn(
       "flex items-center gap-3 p-3 rounded-lg border transition-colors",
-      isCompleted ? "bg-green-50 border-green-200" : "bg-background border-border hover:bg-muted/50"
+      isCompleted ? "bg-green-50 border-green-200" : "bg-background border-border hover:bg-muted/50",
+      isLoading && "opacity-60"
     )}>
       <Checkbox
         checked={isCompleted}
-        disabled={isSubmitting}
+        disabled={isSubmitting || isLoading}
         onCheckedChange={(checked) => 
           onToggleComplete(item.item_id, !checked, item.score || undefined)
         }
         className={cn(
           "transition-colors",
-          isCompleted && "data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+          isCompleted && "data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600",
+          isLoading && "animate-pulse"
         )}
       />
       
@@ -88,12 +93,17 @@ function StageItemRow({
         )}
       </div>
       
-      {isCompleted && (
+      {isLoading ? (
+        <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+          <Clock className="w-3 h-3 mr-1 animate-spin" />
+          Saving...
+        </Badge>
+      ) : isCompleted ? (
         <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
           <CheckCircle className="w-3 h-3 mr-1" />
           Done
         </Badge>
-      )}
+      ) : null}
     </div>
   )
 }
@@ -102,11 +112,13 @@ function StageCard({
   stage, 
   enrollmentId, 
   isSubmitting,
+  submittingItemId,
   onToggleComplete 
 }: {
   stage: UserFlowProgress['stages'][0]
   enrollmentId: string
   isSubmitting: boolean
+  submittingItemId: string | null
   onToggleComplete: (itemId: string, isCompleted: boolean, score?: number) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -183,6 +195,7 @@ function StageCard({
                     stageId={stage.stage_id}
                     enrollmentId={enrollmentId}
                     isSubmitting={isSubmitting}
+                    submittingItemId={submittingItemId}
                     onToggleComplete={onToggleComplete}
                   />
                 ))}
@@ -266,7 +279,7 @@ function LoadingSkeleton() {
 
 export function StageProgress({ enrollmentId, onLaunchFlow }: StageProgressProps) {
   const { progress, loading, error } = useFlowProgress(enrollmentId)
-  const { completeItem, isSubmitting } = useProgressMutations(enrollmentId)
+  const { completeItem, isSubmitting, submittingItemId } = useProgressMutations(enrollmentId)
   const stats = useProgressStats(progress)
 
   const handleToggleComplete = async (itemId: string, isCompleted: boolean, score?: number) => {
@@ -325,6 +338,7 @@ export function StageProgress({ enrollmentId, onLaunchFlow }: StageProgressProps
               stage={stage}
               enrollmentId={enrollmentId}
               isSubmitting={isSubmitting}
+              submittingItemId={submittingItemId}
               onToggleComplete={handleToggleComplete}
             />
           ))}

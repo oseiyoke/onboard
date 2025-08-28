@@ -38,21 +38,21 @@ const adminNavItems = [
     href: '/dashboard/assessments',
     icon: Brain,
   },
-  {
-    name: 'Participants',
-    href: '/dashboard/participants',
-    icon: Users,
-  },
-  {
-    name: 'Analytics',
-    href: '/dashboard/analytics',
-    icon: BarChart3,
-  },
-  {
-    name: 'Settings',
-    href: '/dashboard/settings',
-    icon: Settings,
-  },
+  // {
+  //   name: 'Participants',
+  //   href: '/dashboard/participants',
+  //   icon: Users,
+  // },
+  // {
+  //   name: 'Analytics',
+  //   href: '/dashboard/analytics',
+  //   icon: BarChart3,
+  // },
+  // {
+  //   name: 'Settings',
+  //   href: '/dashboard/settings',
+  //   icon: Settings,
+  // },
 ]
 
 const participantNavItems = [

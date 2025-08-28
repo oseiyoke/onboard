@@ -26,9 +26,10 @@ export function useFlowProgress(enrollmentId: string | null) {
   }
 }
 
-// Hook for progress mutations with optimistic updates
+// Hook for progress mutations without optimistic updates
 export function useProgressMutations(enrollmentId: string) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submittingItemId, setSubmittingItemId] = useState<string | null>(null)
 
   const startStage = async (stageId: string) => {
     if (isSubmitting) return
@@ -54,39 +55,12 @@ export function useProgressMutations(enrollmentId: string) {
     if (isSubmitting) return
 
     setIsSubmitting(true)
+    setSubmittingItemId(itemId)
     try {
-      // Optimistically update the UI
-      await mutate(
-        `flow-progress-${enrollmentId}`,
-        async (currentProgress: UserFlowProgress | undefined) => {
-          if (!currentProgress) return currentProgress
-
-          const updatedProgress = { ...currentProgress }
-          updatedProgress.stages = currentProgress.stages.map(stage => ({
-            ...stage,
-            items: stage.items.map(item => 
-              item.item_id === itemId 
-                ? { 
-                    ...item, 
-                    completed_at: new Date().toISOString(),
-                    score: score || item.score 
-                  }
-                : item
-            )
-          }))
-
-          return updatedProgress
-        },
-        { revalidate: false }
-      )
-
       // Make the actual API call
       await clientProgressService.completeStageItem(itemId, enrollmentId, score)
       
-      // Small delay to allow backend processing before cache revalidation
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // Revalidate to get fresh data
+      // Fetch fresh data from the server
       await mutate(`flow-progress-${enrollmentId}`)
       await mutate('participant-enrollments')
       await mutate('available-flows') // Also update the available flows cache for completion status
@@ -95,11 +69,9 @@ export function useProgressMutations(enrollmentId: string) {
     } catch (error) {
       console.error('Failed to complete item:', error)
       toast.error('Failed to complete item')
-      
-      // Revert optimistic update on error
-      await mutate(`flow-progress-${enrollmentId}`)
     } finally {
       setIsSubmitting(false)
+      setSubmittingItemId(null)
     }
   }
 
@@ -117,6 +89,7 @@ export function useProgressMutations(enrollmentId: string) {
     completeItem,
     toggleItemComplete,
     isSubmitting,
+    submittingItemId,
   }
 }
 

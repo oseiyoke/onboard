@@ -23,7 +23,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
     { progress },
     {
       headers: {
-        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     }
   )

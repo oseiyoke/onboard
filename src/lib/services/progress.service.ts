@@ -1,6 +1,6 @@
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { createClient as createBrowserClient } from '@/utils/supabase/client'
-import { unstable_cache } from 'next/cache'
+import { unstable_cache, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
 // Schemas
@@ -156,10 +156,15 @@ export class ProgressService {
           throw new Error('Failed to fetch progress')
         }
 
+        const flowData = enrollment.flow as unknown as { name: string } | { name: string }[] | null
+        const flowName = flowData 
+          ? (Array.isArray(flowData) ? flowData[0]?.name : flowData.name)
+          : undefined
+
         return {
           enrollment_id: enrollment.id,
           flow_id: enrollment.flow_id,
-          flow_title: (enrollment.flow as any)?.name || 'Untitled Flow',
+          flow_title: flowName || 'Untitled Flow',
           started_at: enrollment.started_at,
           completed_at: enrollment.completed_at,
           stages: stages.map(stage => ({
@@ -218,6 +223,13 @@ export class ProgressService {
       throw new Error('Failed to mark stage as started')
     }
 
+    // Invalidate caches to ensure fresh data
+    if (isServer()) {
+      await revalidateTag(`progress-${validated.user_id}-${validated.enrollment_id}`)
+      await revalidateTag(`user-progress-${validated.user_id}`)
+      await revalidateTag(`enrollment-${validated.enrollment_id}`)
+    }
+
     return progress as StageProgress
   }
 
@@ -238,6 +250,13 @@ export class ProgressService {
     if (error) {
       console.error('Stage completion error:', error)
       throw new Error('Failed to mark stage as completed')
+    }
+
+    // Invalidate caches to ensure fresh data
+    if (isServer()) {
+      await revalidateTag(`progress-${userId}-${enrollmentId}`)
+      await revalidateTag(`user-progress-${userId}`)
+      await revalidateTag(`enrollment-${enrollmentId}`)
     }
 
     return progress as StageProgress
@@ -271,6 +290,13 @@ export class ProgressService {
       validated.enrollment_id,
       validated.stage_item_id
     )
+
+    // Invalidate caches to ensure fresh data
+    if (isServer()) {
+      await revalidateTag(`progress-${validated.user_id}-${validated.enrollment_id}`)
+      await revalidateTag(`user-progress-${validated.user_id}`)
+      await revalidateTag(`enrollment-${validated.enrollment_id}`)
+    }
 
     return progress as StageItemProgress
   }
@@ -350,6 +376,13 @@ export class ProgressService {
           completed_at: new Date().toISOString(),
         })
         .eq('id', enrollmentId)
+
+      // Invalidate caches to ensure fresh data
+      if (isServer()) {
+        await revalidateTag(`progress-${userId}-${enrollmentId}`)
+        await revalidateTag(`user-progress-${userId}`)
+        await revalidateTag(`enrollment-${enrollmentId}`)
+      }
     }
   }
 

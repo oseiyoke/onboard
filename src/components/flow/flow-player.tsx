@@ -38,7 +38,7 @@ interface FlowPlayerProps {
 export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerProps) {
   const [showCelebration, setShowCelebration] = useState(false)
   const [previousProgress, setPreviousProgress] = useState(0)
-  const { completeItem, isSubmitting } = useProgressMutations(enrollmentId)
+  const { completeItem } = useProgressMutations(enrollmentId)
   
   // Calculate initial position based on progress for seamless resume
   const getInitialPosition = () => {
@@ -79,6 +79,8 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
   const initialPosition = getInitialPosition()
   const [currentStageIndex, setCurrentStageIndex] = useState(initialPosition.stageIndex)
   const [activeItemIndex, setActiveItemIndex] = useState(initialPosition.itemIndex)
+  // Loading state for action buttons within FlowPlayer scope
+  const [buttonLoading, setButtonLoading] = useState(false)
   
   const currentStage = stages[currentStageIndex]
   const currentStageProgress = progress.stages.find(s => s.stage_id === currentStage?.id)
@@ -142,7 +144,8 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
   }, [currentStageIndex, activeItemIndex, stages, currentStage])
 
   const handleCompleteItem = async (itemId: string, score?: number) => {
-    if (isSubmitting) return
+    if (buttonLoading) return
+    setButtonLoading(true)
     
     try {
       // Use the optimistic update from the hook
@@ -172,6 +175,8 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
     } catch (error) {
       console.error('Failed to complete item:', error)
       // Error handling is already done in the hook
+    } finally {
+      setButtonLoading(false)
     }
   }
 
@@ -539,8 +544,13 @@ function ContentItemRenderer({
         <Separator className="my-4" />
         <div className="flex justify-end">
           {!isCompleted ? (
-            <Button onClick={() => onComplete()}>
-              Mark as Complete
+            <Button onClick={() => onComplete()} disabled={loading}>
+              {loading ? (
+                <>
+                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full" />
+                  Saving...
+                </>
+              ) : 'Mark as Complete'}
             </Button>
           ) : (
             <Badge variant="secondary" className="gap-2">
@@ -798,6 +808,18 @@ function ItemContent({
   isCompleted: boolean 
   enrollmentId: string
 }) {
+  const [buttonLoading, setButtonLoading] = useState(false)
+  const handleMarkComplete = async () => {
+    console.log("We dey mark am complete o")
+    if (buttonLoading) return
+    setButtonLoading(true)
+    try {
+      await onComplete()
+    } finally {
+      setButtonLoading(false)
+    }
+  }
+  
   const typedItem = item as { 
     type: string; 
     title: string; 
@@ -822,8 +844,13 @@ function ItemContent({
           <Separator className="my-4" />
           <div className="flex justify-end">
             {!isCompleted ? (
-              <Button onClick={() => onComplete()}>
-                Mark as Complete
+              <Button onClick={handleMarkComplete} disabled={buttonLoading}>
+                {buttonLoading ? (
+                  <>
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full" />
+                    Saving...
+                  </>
+                ) : 'Mark as Complete'}
               </Button>
             ) : (
               <Badge variant="secondary" className="gap-2">
@@ -843,7 +870,7 @@ function ItemContent({
       return (
         <ContentItemRenderer 
           contentId={typedItem.content_id}
-          onComplete={onComplete}
+          onComplete={handleMarkComplete}
           isCompleted={isCompleted}
         />
       )
@@ -871,8 +898,13 @@ function ItemContent({
           <Separator className="my-4" />
           <div className="flex justify-end">
             {!isCompleted ? (
-              <Button onClick={() => onComplete()}>
-                Mark as Complete
+              <Button onClick={handleMarkComplete} disabled={buttonLoading}>
+                {buttonLoading ? (
+                  <>
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full" />
+                    Saving...
+                  </>
+                ) : 'Mark as Complete'}
               </Button>
             ) : (
               <Badge variant="secondary" className="gap-2">
@@ -893,7 +925,7 @@ function ItemContent({
         <AssessmentItemRenderer 
           assessmentId={typedItem.assessment_id}
           enrollmentId={enrollmentId}
-          onComplete={onComplete}
+          onComplete={handleMarkComplete}
           isCompleted={isCompleted}
         />
       )
@@ -921,8 +953,13 @@ function ItemContent({
           <Separator className="my-4" />
           <div className="flex justify-end">
             {!isCompleted ? (
-              <Button onClick={() => onComplete()}>
-                Mark as Complete
+              <Button onClick={handleMarkComplete} disabled={buttonLoading}>
+                {buttonLoading ? (
+                  <>
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full" />
+                    Saving...
+                  </>
+                ) : 'Mark as Complete'}
               </Button>
             ) : (
               <Badge variant="secondary" className="gap-2">
