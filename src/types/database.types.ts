@@ -46,6 +46,7 @@ export type Database = {
           created_at: string
           updated_at: string
           last_login: string | null
+          member: boolean | null
         }
         Insert: {
           id: string
@@ -57,6 +58,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
           last_login?: string | null
+          member?: boolean | null
         }
         Update: {
           id?: string
@@ -68,6 +70,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
           last_login?: string | null
+          member?: boolean | null
         }
       }
       onboard_flows: {

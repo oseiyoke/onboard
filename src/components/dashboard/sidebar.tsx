@@ -8,16 +8,21 @@ import { useCompletionStatus } from '@/hooks/use-completion-status'
 import { 
   LayoutDashboard, 
   Users, 
-  FileText, 
-  Settings, 
-  BarChart3,
   Workflow,
   Upload,
   Brain,
   Award
 } from 'lucide-react'
 
-const adminNavItems = [
+interface NavItem {
+  name: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  requiresCompletion?: boolean
+  requiresMembership?: boolean
+}
+
+const adminNavItems: NavItem[] = [
   {
     name: 'Dashboard',
     href: '/dashboard',
@@ -38,11 +43,11 @@ const adminNavItems = [
     href: '/dashboard/assessments',
     icon: Brain,
   },
-  // {
-  //   name: 'Participants',
-  //   href: '/dashboard/participants',
-  //   icon: Users,
-  // },
+  {
+    name: 'Users',
+    href: '/dashboard/users',
+    icon: Users,
+  },
   // {
   //   name: 'Analytics',
   //   href: '/dashboard/analytics',
@@ -55,7 +60,7 @@ const adminNavItems = [
   // },
 ]
 
-const participantNavItems = [
+const participantNavItems: NavItem[] = [
   {
     name: 'My Progress',
     href: '/dashboard',
@@ -67,6 +72,12 @@ const participantNavItems = [
     icon: Workflow,
   },
   {
+    name: 'Content Library',
+    href: '/dashboard/content',
+    icon: Upload,
+    requiresMembership: true,
+  },
+  {
     name: 'Certificates',
     href: '/dashboard/certificate',
     icon: Award,
@@ -76,9 +87,10 @@ const participantNavItems = [
 
 interface DashboardSidebarProps {
   userRole: 'admin' | 'participant'
+  isMember: boolean
 }
 
-export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
+export function DashboardSidebar({ userRole, isMember }: DashboardSidebarProps) {
   const pathname = usePathname()
   const completionStatus = useCompletionStatus()
   
@@ -99,8 +111,8 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
         {navItems.map((item) => {
           const isActive = pathname === item.href
           const isDisabled = userRole === 'participant' && 
-            item.requiresCompletion && 
-            !completionStatus.hasCompletedFlows
+            ((item.requiresCompletion && !completionStatus.hasCompletedFlows) ||
+             (item.requiresMembership && !isMember))
           
           if (isDisabled) {
             return (
@@ -117,6 +129,11 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
                 {item.requiresCompletion && (
                   <span className="ml-auto text-xs text-muted-foreground">
                     Complete a flow
+                  </span>
+                )}
+                {item.requiresMembership && (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    Member access
                   </span>
                 )}
               </Button>

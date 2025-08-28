@@ -8,6 +8,7 @@ type AuthContextType = {
   user: User | null
   loading: boolean
   userRole: 'admin' | 'participant' | null
+  isMember: boolean
   signOut: () => Promise<void>
 }
 
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   userRole: null,
+  isMember: false,
   signOut: async () => {},
 })
 
@@ -22,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState<'admin' | 'participant' | null>(null)
+  const [isMember, setIsMember] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -33,15 +36,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch user's organization and role
         const { data: userData, error } = await supabase
           .from('onboard_users')
-          .select('role')
+          .select('role, member')
           .eq('id', user.id)
           .single()
         
         if (userData) {
           setUserRole(userData.role)
+          setIsMember(userData.role === 'admin' || userData.member || false)
         } else if (error && error.code === 'PGRST116') {
           // User not found in onboard_users, needs onboarding
           console.log('User needs onboarding')
+          setIsMember(false)
         }
       }
       
@@ -57,19 +62,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           const { data: userData, error } = await supabase
             .from('onboard_users')
-            .select('role')
+            .select('role, member')
             .eq('id', session.user.id)
             .single()
           
           if (userData) {
             setUserRole(userData.role)
+            setIsMember(userData.role === 'admin' || userData.member || false)
           } else if (error && error.code === 'PGRST116') {
             // User not found in onboard_users, needs onboarding
             console.log('User needs onboarding')
             setUserRole(null)
+            setIsMember(false)
           }
         } else {
           setUserRole(null)
+          setIsMember(false)
         }
         
         setLoading(false)
@@ -99,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, 
       loading, 
       userRole, 
+      isMember,
       signOut 
     }}>
       {children}

@@ -22,7 +22,7 @@ export default async function DashboardLayout({
   // Fetch onboarding info
   const { data: onboardUser } = await supabase
     .from('onboard_users')
-    .select('role')
+    .select('role, member')
     .eq('id', user.id)
     .single()
 
@@ -30,9 +30,11 @@ export default async function DashboardLayout({
     redirect('/onboard')
   }
 
+  const isMember = onboardUser.role === 'admin' || onboardUser.member || false
+
   return (
     <div className="min-h-screen bg-background">
-      <DashboardSidebar userRole={onboardUser.role} />
+      <DashboardSidebar userRole={onboardUser.role} isMember={isMember} />
       <div className="lg:pl-64">
         <DashboardHeader />
         <main className="p-6">{children}</main>

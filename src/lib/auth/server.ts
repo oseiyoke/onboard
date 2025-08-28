@@ -9,6 +9,7 @@ export interface AuthenticatedUser {
   orgId: string
   firstName: string | null
   lastName: string | null
+  member: boolean
 }
 
 /**
@@ -30,7 +31,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
   // Fetch user role, org and names
   const { data: userData, error } = await supabase
     .from('onboard_users')
-    .select('role, org_id, first_name, last_name')
+    .select('role, org_id, first_name, last_name, member')
     .eq('id', user.id)
     .single()
 
@@ -45,6 +46,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     orgId: userData.org_id,
     firstName: userData.first_name,
     lastName: userData.last_name,
+    member: userData.role === 'admin' || userData.member || false,
   }
 }
 
@@ -67,7 +69,7 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     // Fetch user role, org and names
     const { data: userData, error } = await supabase
       .from('onboard_users')
-      .select('role, org_id, first_name, last_name')
+      .select('role, org_id, first_name, last_name, member')
       .eq('id', user.id)
       .single()
 
@@ -82,6 +84,7 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
       orgId: userData.org_id,
       firstName: userData.first_name,
       lastName: userData.last_name,
+      member: userData.role === 'admin' || userData.member || false,
     }
   } catch (error) {
     console.error('Authentication error:', error)
@@ -139,7 +142,7 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 
     const { data: userData, error } = await supabase
       .from('onboard_users')
-      .select('role, org_id, first_name, last_name')
+      .select('role, org_id, first_name, last_name, member')
       .eq('id', user.id)
       .single()
 
@@ -154,6 +157,7 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
       orgId: userData.org_id,
       firstName: userData.first_name,
       lastName: userData.last_name,
+      member: userData.role === 'admin' || userData.member || false,
     }
   } catch {
     return null
