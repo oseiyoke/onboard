@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Users, Shield, User, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { UserDetailModal } from '@/components/users/user-detail-modal'
 
 interface UserData {
   id: string
@@ -19,18 +21,33 @@ interface UserData {
   createdAt: string
 }
 
+interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
 export function UsersPageClient() {
   const [users, setUsers] = useState<UserData[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<Pagination | null>(null)
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const currentPage = parseInt(searchParams.get('page') ?? '1', 10) || 1
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    fetchUsers(currentPage)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage])
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page: number) => {
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch(`/api/users?page=${page}&limit=25`, {
         credentials: 'include',
       })
 
@@ -40,6 +57,9 @@ export function UsersPageClient() {
 
       const data = await response.json()
       setUsers(data.users)
+      if (data.pagination) {
+        setPagination(data.pagination)
+      }
     } catch (error) {
       console.error('Error fetching users:', error)
       toast.error('Failed to load users')
@@ -131,12 +151,18 @@ export function UsersPageClient() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">
+                      <button 
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setModalOpen(true)
+                        }}
+                        className="font-medium hover:underline text-left"
+                      >
                         {user.firstName && user.lastName 
                           ? `${user.firstName} ${user.lastName}`
                           : user.email
                         }
-                      </span>
+                      </button>
                       <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                         {user.role}
                       </Badge>
@@ -175,9 +201,38 @@ export function UsersPageClient() {
                 No users found
               </div>
             )}
+            {pagination && (
+              <div className="flex justify-center items-center gap-4 pt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.page <= 1}
+                  onClick={() => router.push(`?page=${pagination.page - 1}`)}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.page >= pagination.totalPages}
+                  onClick={() => router.push(`?page=${pagination.page + 1}`)}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      <UserDetailModal
+        user={selectedUser}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   )
 }
