@@ -22,18 +22,19 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: { p
   const url = new URL(request.url)
   const queryParams = Object.fromEntries(url.searchParams.entries())
   const query = AttemptsQuerySchema.parse(queryParams)
+  console.log("Here goes the query", query)
   
   // Check if assessment exists
   const assessment = await assessmentService.getAssessmentById(id)
   if (!assessment) {
     return new Response('Assessment not found', { status: 404 })
   }
+
   
   const result = await assessmentService.getAssessmentAttempts(id, {
     page: query.page,
     limit: query.limit,
     userId: query.userId,
-    passed: query.passed,
   })
   
   return createPaginatedResponse(

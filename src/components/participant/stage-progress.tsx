@@ -287,7 +287,7 @@ export function StageProgress({ enrollmentId, onLaunchFlow }: StageProgressProps
           <div className="text-destructive text-sm">
             Failed to load progress data
           </div>
-          <Button onClick={() => window.location.reload()} variant="outline">
+          <Button onClick={() => window.location.href = window.location.href} variant="outline">
             Refresh
           </Button>
         </CardContent>
@@ -308,7 +308,7 @@ export function StageProgress({ enrollmentId, onLaunchFlow }: StageProgressProps
             {stats.completionPercentage > 0 ? 'Continue Learning' : 'Start Learning'}
           </Button>
         )}
-        <Button variant="outline" onClick={() => window.location.reload()}>
+        <Button variant="outline" onClick={() => window.location.href = window.location.href}>
           <Clock className="w-4 h-4 mr-2" />
           Refresh Progress
         </Button>

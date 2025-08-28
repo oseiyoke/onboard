@@ -112,7 +112,7 @@ export interface AssessmentAttempt {
 export interface AssessmentAttemptWithUser extends AssessmentAttempt {
   user: {
     id: string
-    name: string
+    first_name: string
     email: string
   }
 }
@@ -503,7 +503,7 @@ export class AssessmentService {
         *,
         user:onboard_users(
           id,
-          name,
+          first_name,
           email
         )
       `, { count: 'exact' })
@@ -517,8 +517,12 @@ export class AssessmentService {
     if (passed !== undefined) {
       query = query.eq('is_passed', passed)
     }
+    console.log('passed', passed)
 
     const { data, error, count } = await query.range(offset, offset + limit - 1)
+
+    console.log('query ', query)
+    console.log('query on getAssessmentAttempts', data)
 
     if (error) {
       console.error('Assessment attempts fetch error:', error)

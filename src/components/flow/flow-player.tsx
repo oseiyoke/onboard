@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { StageWithItems } from '@/lib/services/stage.service'
 import { UserFlowProgress } from '@/lib/services/progress.client'
+import { useProgressMutations } from '@/hooks/use-progress'
 import { ContentViewer } from '@/components/content/content-viewer'
 import { AssessmentPlayer } from '@/components/assessment/assessment-player'
 import { toast } from 'sonner'
@@ -37,6 +38,7 @@ interface FlowPlayerProps {
 export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerProps) {
   const [showCelebration, setShowCelebration] = useState(false)
   const [previousProgress, setPreviousProgress] = useState(0)
+  const { completeItem, isSubmitting } = useProgressMutations(enrollmentId)
   
   // Calculate initial position based on progress for seamless resume
   const getInitialPosition = () => {
@@ -140,25 +142,13 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
   }, [currentStageIndex, activeItemIndex, stages, currentStage])
 
   const handleCompleteItem = async (itemId: string, score?: number) => {
+    if (isSubmitting) return
+    
     try {
-      const response = await fetch(`/api/progress/stage-items/${itemId}/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          enrollment_id: enrollmentId,
-          ...(score !== undefined && { score }),
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to mark item as complete')
-      }
-
-      toast.success('Item completed!')
+      // Use the optimistic update from the hook
+      await completeItem(itemId, score)
       
-      // Move to next item or stage
+      // Move to next item or stage after successful completion
       if (activeItemIndex < currentStage.items.length - 1) {
         setActiveItemIndex(activeItemIndex + 1)
       } else if (currentStageIndex < stages.length - 1) {
@@ -166,12 +156,22 @@ export function FlowPlayer({ flow, stages, progress, enrollmentId }: FlowPlayerP
         setActiveItemIndex(0)
       }
       
-      // For now, still refresh to get updated progress
-      // TODO: Implement optimistic updates in the future
-      setTimeout(() => window.location.reload(), 500)
+      // Check if flow is complete for celebration
+      const isFlowComplete = stages.every(stage => 
+        stage.items.every(item => 
+          item.id === itemId || progress?.stages
+            .find(s => s.stage_id === stage.id)
+            ?.items.find(i => i.item_id === item.id)
+            ?.completed_at
+        )
+      )
+      
+      if (isFlowComplete) {
+        setShowCelebration(true)
+      }
     } catch (error) {
-      toast.error('Failed to complete item')
-      console.error(error)
+      console.error('Failed to complete item:', error)
+      // Error handling is already done in the hook
     }
   }
 

@@ -222,7 +222,8 @@ export function validateAssessmentForSave(data: AssessmentData, questions: Quest
       return `Question ${i + 1} text is required`
     }
     
-    if (question.type !== 'essay' && (!question.correctAnswer || question.correctAnswer === '')) {
+    // Essay and short_answer questions don't require a correct answer
+    if (!['essay', 'short_answer'].includes(question.type) && (!question.correctAnswer || question.correctAnswer === '')) {
       return `Question ${i + 1} must have a correct answer`
     }
     

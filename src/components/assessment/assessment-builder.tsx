@@ -95,6 +95,8 @@ export function AssessmentBuilder({
     ...(mode === 'edit' && isPublished ? [{ id: 'attempts' as Step, title: 'Attempts', description: 'View assessment attempts and results' }] : []),
   ]
 
+  console.log('isPublished', isPublished)
+  console.log('mode', mode)
   // Auto-advance to appropriate step based on creation method
   useEffect(() => {
     if (creationMethod !== 'manual' && currentStep === 'details') {
@@ -294,7 +296,11 @@ export function AssessmentBuilder({
       return questions.length > 0
     }
     if (stepId === 'questions') {
-      return questions.length > 0 && questions.every(q => q.question && q.correctAnswer)
+      return questions.length > 0 && questions.every(q => {
+        // For essay and short_answer questions, correctAnswer is optional
+        const needsCorrectAnswer = !['essay', 'short_answer'].includes(q.type)
+        return q.question && (!needsCorrectAnswer || q.correctAnswer)
+      })
     }
     if (stepId === 'preview') {
       return isReadyToSave

@@ -12,7 +12,8 @@ export function useParticipantFlows() {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      refreshInterval: 30000, // Refresh every 30 seconds
+      refreshInterval: 0, // Disabled - rely on manual revalidation
+      dedupingInterval: 5000, // Prevent duplicate requests for 5 seconds
     }
   )
 
@@ -32,7 +33,8 @@ export function useAvailableFlows() {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      refreshInterval: 30000, // Refresh every 30 seconds
+      refreshInterval: 0, // Disabled - rely on manual revalidation
+      dedupingInterval: 5000, // Prevent duplicate requests for 5 seconds
     }
   )
 

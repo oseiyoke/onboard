@@ -13,6 +13,8 @@ export function useFlowProgress(enrollmentId: string | null) {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
+      dedupingInterval: 2000, // Prevent duplicate requests for 2 seconds
+      refreshInterval: 0, // Disable automatic refresh
     }
   )
 
@@ -81,9 +83,13 @@ export function useProgressMutations(enrollmentId: string) {
       // Make the actual API call
       await clientProgressService.completeStageItem(itemId, enrollmentId, score)
       
+      // Small delay to allow backend processing before cache revalidation
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       // Revalidate to get fresh data
       await mutate(`flow-progress-${enrollmentId}`)
       await mutate('participant-enrollments')
+      await mutate('available-flows') // Also update the available flows cache for completion status
       
       toast.success('Item completed!')
     } catch (error) {
