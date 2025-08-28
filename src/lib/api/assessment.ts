@@ -184,6 +184,45 @@ export async function publishAssessment(assessmentId: string): Promise<Assessmen
 }
 
 /**
+ * Update a question
+ */
+export async function updateQuestion(questionId: string, data: Partial<CreateQuestion>): Promise<QuestionResponse> {
+  const response = await fetch(`/api/questions/${questionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to update question' }))
+    throw new Error(error.message || 'Failed to update question')
+  }
+
+  return response.json()
+}
+
+/**
+ * Delete a question
+ */
+export async function deleteQuestion(questionId: string): Promise<void> {
+  const response = await fetch(`/api/questions/${questionId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to delete question' }))
+    throw new Error(error.message || 'Failed to delete question')
+  }
+}
+
+/**
  * Update an assessment
  */
 export async function updateAssessment(assessmentId: string, data: Partial<CreateAssessment>): Promise<AssessmentResponse> {

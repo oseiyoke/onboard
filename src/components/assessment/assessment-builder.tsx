@@ -15,6 +15,8 @@ import {
   generateAssessment, 
   createAssessment, 
   createQuestions,
+  updateQuestion,
+  updateAssessment,
   publishAssessment 
 } from '@/lib/api/assessment'
 import {
@@ -23,6 +25,7 @@ import {
   apiGeneratedQuestionsToUi,
   validateAssessmentForSave,
   createEmptyQuestion,
+  isUuid,
   type AssessmentData,
   type Question
 } from '@/lib/utils/assessment-mapper'
@@ -181,7 +184,7 @@ export function AssessmentBuilder({
     try {
       let assessmentId = savedAssessmentId
 
-      // Create assessment if it doesn't exist
+      // Create assessment if it doesn't exist, otherwise update existing assessment
       if (!assessmentId) {
         const generationType: 'manual' | 'content' | 'prompt' | 'youtube' = lastGenerationSource?.type || 'manual'
         const apiAssessment = uiAssessmentToApi(
@@ -193,12 +196,42 @@ export function AssessmentBuilder({
         const assessmentResponse = await createAssessment(apiAssessment)
         assessmentId = assessmentResponse.assessment.id
         setSavedAssessmentId(assessmentId)
+      } else {
+        // Update existing assessment details
+        const generationType: 'manual' | 'content' | 'prompt' | 'youtube' = lastGenerationSource?.type || 'manual'
+        const apiAssessment = uiAssessmentToApi(
+          assessmentData,
+          generationType,
+          lastGenerationSource || undefined
+        )
+
+        await updateAssessment(assessmentId, apiAssessment)
       }
 
-      // Create questions if they don't exist on the server
+      // Handle questions - separate new questions from existing ones
       if (questions.length > 0 && assessmentId) {
-        const apiQuestions = uiQuestionsToApi(questions)
-        await createQuestions(assessmentId, apiQuestions)
+        const newQuestions = questions.filter(q => !isUuid(q.id))
+        const existingQuestions = questions.filter(q => isUuid(q.id))
+
+        // Create new questions
+        if (newQuestions.length > 0) {
+          const apiNewQuestions = uiQuestionsToApi(newQuestions)
+          await createQuestions(assessmentId, apiNewQuestions)
+        }
+
+        // Update existing questions
+        if (existingQuestions.length > 0) {
+          await Promise.all(
+            existingQuestions.map(async (question) => {
+              if (isUuid(question.id)) {
+                const apiQuestion = uiQuestionsToApi([question])[0]
+                // Remove the id from the update data since it's not needed for PATCH
+                delete (apiQuestion as Record<string, unknown>).id
+                await updateQuestion(question.id, apiQuestion)
+              }
+            })
+          )
+        }
       }
 
       // Publish if requested

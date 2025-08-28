@@ -551,12 +551,13 @@ export class AssessmentService {
       }
     })
 
-    const score = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0
-    const isPassed = score >= assessment.passing_score
+    // Retain raw points in the DB. We still need percentage internally to decide pass/fail.
+    const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0
+    const isPassed = percentage >= assessment.passing_score
 
     return {
-      score: Math.round(score * 100) / 100, // Round to 2 decimal places
-      maxScore: totalPoints,
+      score: earnedPoints,          // raw earned points
+      maxScore: totalPoints,        // total possible points
       isPassed,
     }
   }

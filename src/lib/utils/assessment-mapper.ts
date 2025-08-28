@@ -26,6 +26,13 @@ export interface Question {
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+export function isUuid(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+}
+
+/**
  * Convert UI AssessmentData to API CreateAssessment format
  */
 export function uiAssessmentToApi(
@@ -67,8 +74,8 @@ export function uiAssessmentToApi(
 /**
  * Convert UI Question to API CreateQuestion format
  */
-export function uiQuestionToApi(question: Question): CreateQuestion {
-  return {
+export function uiQuestionToApi(question: Question): CreateQuestion & { id?: string } {
+  const baseQuestion = {
     type: question.type as any,
     question: question.question,
     options: question.options,
@@ -78,6 +85,13 @@ export function uiQuestionToApi(question: Question): CreateQuestion {
     position: question.position,
     metadata: {}
   }
+
+  // Preserve UUID ids for existing questions
+  if (question.id && isUuid(question.id)) {
+    return { ...baseQuestion, id: question.id }
+  }
+
+  return baseQuestion
 }
 
 /**

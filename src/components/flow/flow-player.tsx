@@ -654,16 +654,16 @@ function AssessmentItemRenderer({
       setShowPlayer(false)
       
       // Calculate score as percentage
-      const score = result.attempt.max_score && result.attempt.max_score > 0 
+      const scorePercent = result.attempt.max_score && result.attempt.max_score > 0 
         ? (result.attempt.score / result.attempt.max_score) * 100 
         : 0
-      const passed = score >= typedAssessment?.passing_score
+      const passed = scorePercent >= typedAssessment?.passing_score
       
       if (passed) {
-        toast.success(`Assessment completed! Score: ${Math.round(score)}%`)
-        onComplete(score)
+        toast.success(`Assessment completed! Score: ${Math.round(scorePercent)}%`)
+        onComplete(scorePercent)
       } else {
-        toast.error(`Assessment failed. Score: ${Math.round(score)}%. Passing score: ${typedAssessment?.passing_score}%`)
+        toast.error(`Assessment failed. Score: ${Math.round(scorePercent)}%. Passing score: ${typedAssessment?.passing_score}%`)
       }
     } catch (error) {
       toast.error('Failed to submit assessment')
