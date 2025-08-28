@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ThemeSelector } from '@/components/theme-selector'
+// import { ThemeSelector } from '@/components/theme-selector' // Theme now controlled by environment variable
 import Link from 'next/link'
 import { sendReset } from './actions'
 
@@ -10,10 +10,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      {/* Theme Selector in top right */}
-      <div className="fixed top-4 right-4 z-10">
-        <ThemeSelector />
-      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/lib/providers/auth-provider'
-import { useTheme } from '@/lib/providers/theme-provider'
+// import { useTheme } from '@/lib/providers/theme-provider' // Theme now controlled by environment variable
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { User, LogOut, Palette } from 'lucide-react'
-import { ThemeSelector } from '@/components/theme-selector'
+// import { ThemeSelector } from '@/components/theme-selector' // Theme now controlled by environment variable
 
 export function DashboardHeader() {
   const { user, userRole } = useAuth()
@@ -40,8 +40,6 @@ export function DashboardHeader() {
         </div>
         
         <div className="flex items-center gap-4">
-          <ThemeSelector />
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2">

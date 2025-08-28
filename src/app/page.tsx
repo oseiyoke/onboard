@@ -1,16 +1,11 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ThemeSelector } from '@/components/theme-selector'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
       <div className="container mx-auto px-4 py-16">
-        {/* Theme Selector in top right */}
-        <div className="flex justify-end mb-8">
-          <ThemeSelector />
-        </div>
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Welcome to <span className="text-primary">Onboard</span>

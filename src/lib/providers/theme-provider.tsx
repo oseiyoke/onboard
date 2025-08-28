@@ -12,18 +12,14 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemePreset>(themePresets[0]) // Default to violet
+  // Get theme from environment variable or default to violet
+  const getInitialTheme = () => {
+    const envTheme = process.env.NEXT_PUBLIC_APP_THEME || 'violet'
+    const foundTheme = themePresets.find(t => t.id === envTheme)
+    return foundTheme || themePresets[0] // Fallback to violet if env theme not found
+  }
 
-  useEffect(() => {
-    // Load theme from localStorage on mount
-    const savedTheme = localStorage.getItem('onboard-theme')
-    if (savedTheme) {
-      const foundTheme = themePresets.find(t => t.id === savedTheme)
-      if (foundTheme) {
-        setThemeState(foundTheme)
-      }
-    }
-  }, [])
+  const [theme] = useState<ThemePreset>(getInitialTheme())
 
   useEffect(() => {
     // Apply theme colors to CSS variables
@@ -35,9 +31,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     })
   }, [theme])
 
-  const setTheme = (newTheme: ThemePreset) => {
-    setThemeState(newTheme)
-    localStorage.setItem('onboard-theme', newTheme.id)
+  const setTheme = () => {
+    // Theme is now controlled by environment variable, but keeping this for backwards compatibility
+    console.warn('Theme changes are no longer supported. Please set NEXT_PUBLIC_APP_THEME environment variable.')
   }
 
   return (
