@@ -186,7 +186,7 @@ export function UsersPageClient() {
                       disabled={user.role === 'admin' || updating === user.id}
                     />
                     <Label htmlFor={`member-${user.id}`} className="text-sm">
-                      Content Access
+                      Member
                     </Label>
                   </div>
                   {updating === user.id && (

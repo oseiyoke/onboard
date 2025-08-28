@@ -6,6 +6,7 @@ import { CACHE_TAGS } from '@/lib/utils/cache-invalidation'
 export const CreateFlowSchema = z.object({
   name: z.string().min(1, 'Flow name is required').max(100, 'Name too long'),
   description: z.string().optional(),
+  promote_to_member: z.boolean().default(false),
 })
 
 export const UpdateFlowSchema = z.object({
@@ -13,6 +14,7 @@ export const UpdateFlowSchema = z.object({
   description: z.string().optional(),
   flow_data: z.record(z.unknown()).optional(),
   is_active: z.boolean().optional(),
+  promote_to_member: z.boolean().optional(),
 })
 
 export const FlowQuerySchema = z.object({
@@ -32,6 +34,7 @@ export interface Flow {
   description: string | null
   flow_data: Record<string, unknown>
   is_active: boolean
+  promote_to_member: boolean
   created_at: string
   updated_at: string
   created_by: string
@@ -135,6 +138,7 @@ export class FlowService {
         id: flowId,
         name: validated.name,
         description: validated.description || null,
+        promote_to_member: validated.promote_to_member,
         flow_data: {
           nodes: [
             {

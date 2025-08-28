@@ -377,6 +377,20 @@ export class ProgressService {
         })
         .eq('id', enrollmentId)
 
+      // Check if this flow should promote participant to member
+      const { data: flow } = await supabase
+        .from('onboard_flows')
+        .select('promote_to_member')
+        .eq('id', enrollment.flow_id)
+        .single()
+
+      if (flow?.promote_to_member) {
+        await supabase
+          .from('onboard_users')
+          .update({ member: true })
+          .eq('id', userId)
+      }
+
       // Invalidate caches to ensure fresh data
       if (isServer()) {
         await revalidateTag(`progress-${userId}-${enrollmentId}`)

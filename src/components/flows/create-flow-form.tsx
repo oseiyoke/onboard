@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
@@ -13,6 +14,7 @@ import Link from 'next/link'
 export function CreateFlowForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [promoteToMember, setPromoteToMember] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,6 +42,7 @@ export function CreateFlowForm() {
         body: JSON.stringify({
           name: name.trim(),
           description,
+          promote_to_member: promoteToMember,
         }),
       })
 
@@ -93,6 +96,23 @@ export function CreateFlowForm() {
               rows={3}
               disabled={loading}
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="promote-to-member">Promote to Member</Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, participants who complete this flow will be promoted to member status
+                </p>
+              </div>
+              <Switch
+                id="promote-to-member"
+                checked={promoteToMember}
+                onCheckedChange={setPromoteToMember}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">

@@ -66,11 +66,11 @@ const participantNavItems: NavItem[] = [
     href: '/dashboard',
     icon: LayoutDashboard,
   },
-  {
-    name: 'Current Flow',
-    href: '/dashboard/current',
-    icon: Workflow,
-  },
+  // {
+  //   name: 'Current Flow',
+  //   href: '/dashboard/current',
+  //   icon: Workflow,
+  // },
   {
     name: 'Content Library',
     href: '/dashboard/content',

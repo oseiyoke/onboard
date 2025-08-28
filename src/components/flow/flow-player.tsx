@@ -810,7 +810,6 @@ function ItemContent({
 }) {
   const [buttonLoading, setButtonLoading] = useState(false)
   const handleMarkComplete = async () => {
-    console.log("We dey mark am complete o")
     if (buttonLoading) return
     setButtonLoading(true)
     try {

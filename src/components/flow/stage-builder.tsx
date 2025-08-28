@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import { 
   Save, 
   Eye, 
@@ -50,6 +51,7 @@ interface StepConfig {
 interface FlowData {
   title: string
   description: string
+  promote_to_member: boolean
 }
 
 export function StageBuilder({ 
@@ -62,7 +64,8 @@ export function StageBuilder({
   const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set())
   const [flowData, setFlowData] = useState<FlowData>({
     title: initialFlow.name || '',
-    description: initialFlow.description || ''
+    description: initialFlow.description || '',
+    promote_to_member: initialFlow.promote_to_member || false
   })
   const [stages, setStages] = useState<StageWithItems[]>(
     (initialStages || []).sort((a, b) => a.position - b.position)
@@ -162,6 +165,7 @@ export function StageBuilder({
         body: JSON.stringify({
           name: flowData.title,
           description: flowData.description,
+          promote_to_member: flowData.promote_to_member,
         }),
       })
 
@@ -298,6 +302,22 @@ export function StageBuilder({
                   placeholder="Describe what learners will achieve in this flow"
                   rows={3}
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="promote-to-member">Promote to Member</Label>
+                    <p className="text-sm text-muted-foreground">
+                      When enabled, participants who complete this flow will be promoted to member status
+                    </p>
+                  </div>
+                  <Switch
+                    id="promote-to-member"
+                    checked={flowData.promote_to_member}
+                    onCheckedChange={(checked) => setFlowData(prev => ({ ...prev, promote_to_member: checked }))}
+                  />
+                </div>
               </div>
             </div>
           </div>

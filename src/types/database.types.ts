@@ -81,6 +81,7 @@ export type Database = {
           description: string | null
           flow_data: Json
           is_active: boolean
+          promote_to_member: boolean
           created_at: string
           updated_at: string
           created_by: string
@@ -92,6 +93,7 @@ export type Database = {
           description?: string | null
           flow_data: Json
           is_active?: boolean
+          promote_to_member?: boolean
           created_at?: string
           updated_at?: string
           created_by: string
@@ -103,6 +105,7 @@ export type Database = {
           description?: string | null
           flow_data?: Json
           is_active?: boolean
+          promote_to_member?: boolean
           created_at?: string
           updated_at?: string
           created_by?: string
