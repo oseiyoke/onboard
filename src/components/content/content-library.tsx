@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ContentViewer } from './content-viewer'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface ContentItem {
   id: string
@@ -117,6 +117,8 @@ export function ContentLibrary() {
   const [selectedSource, setSelectedSource] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [previewContent, setPreviewContent] = useState<ContentItem | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const queryClient = useQueryClient()
 
   // Build query parameters
@@ -187,6 +189,16 @@ export function ContentLibrary() {
       setSortField(field)
       setSortDirection('asc')
     }
+  }
+
+  const handleContentClick = (content: ContentItem) => {
+    setPreviewContent(content)
+    setIsPreviewOpen(true)
+  }
+
+  const handlePreviewClose = () => {
+    setIsPreviewOpen(false)
+    setPreviewContent(null)
   }
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -364,7 +376,7 @@ export function ContentLibrary() {
                     const contentUrl = item.source === 'upload' ? item.file_url : item.external_url
                     
                     return (
-                      <tr key={item.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <tr key={item.id} className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => handleContentClick(item)}>
                         <td className="p-4">
                           <div className="flex items-center justify-center w-12 h-12">
                             {item.thumbnail_url ? (
@@ -400,7 +412,7 @@ export function ContentLibrary() {
                             {formatDate(item.created_at)}
                           </span>
                         </td>
-                        <td className="p-4 text-right">
+                        <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -408,17 +420,10 @@ export function ContentLibrary() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                    <Eye className="w-4 h-4 mr-2" />
-                                    Preview
-                                  </DropdownMenuItem>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-4xl max-h-[90vh]">
-                                  <ContentViewer content={item} />
-                                </DialogContent>
-                              </Dialog>
+                              <DropdownMenuItem onClick={() => handleContentClick(item)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                Preview
+                              </DropdownMenuItem>
                               
                               {contentUrl && (
                                 <DropdownMenuItem asChild>
@@ -465,6 +470,21 @@ export function ContentLibrary() {
           </CardContent>
         </Card>
       )}
+
+      {/* Centralized Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {previewContent ? `Preview: ${previewContent.name}` : 'Content Preview'}
+            </DialogTitle>
+            <DialogDescription>
+              {previewContent ? `Preview of ${previewContent.type} content from ${previewContent.source}` : 'Preview content'}
+            </DialogDescription>
+          </DialogHeader>
+          {previewContent && <ContentViewer content={previewContent} />}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

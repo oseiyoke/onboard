@@ -7,23 +7,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { User, LogOut, Palette } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 // import { ThemeSelector } from '@/components/theme-selector' // Theme now controlled by environment variable
 
 export function DashboardHeader() {
-  const { user, userRole } = useAuth()
+  const { userRole, signOut } = useAuth()
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    await signOut()
     router.push('/login')
   }
 
@@ -42,23 +38,11 @@ export function DashboardHeader() {
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <User className="w-4 h-4" />
-                {user?.email}
+              <Button variant="ghost" size="sm">
+                <LogOut className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="w-4 h-4 mr-2" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Palette className="w-4 h-4 mr-2" />
-                Themes
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign out

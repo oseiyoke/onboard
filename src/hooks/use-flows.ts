@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { clientProgressService, ParticipantEnrollment, ParticipantFlowPreview } from '@/lib/services/progress.client'
+import React from 'react'
 
 // Hook for fetching participant enrollments (flows they're enrolled in)
 export function useParticipantFlows() {
@@ -17,8 +18,10 @@ export function useParticipantFlows() {
     }
   )
 
+  const memoizedFlows = React.useMemo(() => data ?? [], [data])
+
   return {
-    flows: data || [],
+    flows: memoizedFlows,
     loading: isLoading,
     error,
     refreshFlows: mutate,
@@ -38,8 +41,10 @@ export function useAvailableFlows() {
     }
   )
 
+  const memoizedFlows = React.useMemo(() => data ?? [], [data])
+
   return {
-    flows: data || [],
+    flows: memoizedFlows,
     loading: isLoading,
     error,
     refreshFlows: mutate,

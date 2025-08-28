@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 
 type AuthContextType = {
   user: User | null
@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState<'admin' | 'participant' | null>(null)
   const [isMember, setIsMember] = useState(false)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     const getUser = async () => {

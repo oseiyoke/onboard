@@ -1,18 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Filter, Edit, Trash2, Play, Copy, MoreHorizontal } from 'lucide-react'
+import { Plus, Search, Filter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu'
+
 import {
   Dialog,
   DialogContent,
@@ -78,10 +72,7 @@ export default function AssessmentsPage() {
     (assessment.description ?? '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleDelete = (assessmentId: string) => {
-    setSelectedAssessment(assessmentId)
-    setDeleteDialogOpen(true)
-  }
+
 
   const confirmDelete = () => {
     // Handle deletion
@@ -130,112 +121,34 @@ export default function AssessmentsPage() {
       {/* Assessment Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredAssessments.map((assessment) => (
-          <Card key={assessment.id} className="group hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-base line-clamp-1">
-                    {assessment.name}
-                  </CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {assessment.description}
-                  </CardDescription>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          <Link key={assessment.id} href={`/dashboard/assessments/${assessment.id}/edit`}>
+            <Card className="group hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <CardTitle className="text-base line-clamp-1">
+                      {assessment.name}
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {assessment.description}
+                    </CardDescription>
+                  </div>
+                  
+                  <div className="flex gap-2 flex-wrap">
+                    <Badge 
+                      variant={assessment.isPublished ? "default" : "secondary"}
+                      className="text-xs"
                     >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/dashboard/assessments/${assessment.id}/edit`}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/dashboard/assessments/${assessment.id}/preview`}>
-                        <Play className="h-4 w-4 mr-2" />
-                        Preview
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      className="text-destructive"
-                      onClick={() => handleDelete(assessment.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <div className="flex gap-2 flex-wrap">
-                <Badge 
-                  variant={assessment.isPublished ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {assessment.isPublished ? 'Published' : 'Draft'}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {assessment.generationType === 'manual' ? 'Manual' : 'AI Generated'}
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Questions</span>
-                  <div className="font-semibold">{assessment.questionCount}</div>
+                      {assessment.isPublished ? 'Published' : 'Draft'}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {assessment.generationType === 'manual' ? 'Manual' : 'AI Generated'}
+                    </Badge>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Passing Score</span>
-                  <div className="font-semibold">{assessment.passingScore}%</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Attempts</span>
-                  <div className="font-semibold">{assessment.attempts}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Avg Score</span>
-                  <div className="font-semibold">{assessment.avgScore}%</div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  asChild
-                >
-                  <Link href={`/dashboard/assessments/${assessment.id}/edit`}>
-                    Edit
-                  </Link>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  asChild
-                >
-                  <Link href={`/dashboard/assessments/${assessment.id}/preview`}>
-                    <Play className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+            </Card>
+          </Link>
         ))}
       </div>
 

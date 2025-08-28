@@ -59,6 +59,15 @@ export function useStepNavigation({
     return result
   }, [validation])
 
+  // Side-effect-free validation check (does NOT update state)
+  const isStepValid = useCallback((stepId: string): boolean => {
+    const validator = validation[stepId]
+    if (!validator) return true
+
+    const result = validator()
+    return typeof result === 'string' ? false : result
+  }, [validation])
+
   const isStepCompleted = useCallback((stepId: string): boolean => {
     return completedSteps.has(stepId)
   }, [completedSteps])
@@ -78,8 +87,8 @@ export function useStepNavigation({
 
   const canGoNext = useCallback((): boolean => {
     if (isLastStep) return false
-    return validateStep(currentStepId) && isStepAccessible(steps[currentIndex + 1]?.id)
-  }, [isLastStep, validateStep, currentStepId, isStepAccessible, steps, currentIndex])
+    return isStepValid(currentStepId) && isStepAccessible(steps[currentIndex + 1]?.id)
+  }, [isLastStep, isStepValid, currentStepId, isStepAccessible, steps, currentIndex])
 
   const canGoBack = useCallback((): boolean => {
     return !isFirstStep
