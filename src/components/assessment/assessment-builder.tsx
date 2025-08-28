@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { QuestionBuilder } from './question-builder'
 import { AIGenerationForm } from './ai-generation-form'
 import { AssessmentPreview } from './assessment-preview'
+import { AssessmentAttempts } from './assessment-attempts'
 
 import { Save, Eye, Wand2, Plus, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -34,10 +35,11 @@ interface AssessmentBuilderProps {
   assessmentId?: string // For editing existing assessments
   initialData?: AssessmentData // For editing mode
   initialQuestions?: Question[] // For editing mode
+  isPublished?: boolean // For showing attempts tab
   onCancel: () => void
 }
 
-type Step = 'details' | 'generation' | 'questions' | 'preview'
+type Step = 'details' | 'generation' | 'questions' | 'preview' | 'attempts'
 
 interface StepConfig {
   id: Step
@@ -54,6 +56,7 @@ export function AssessmentBuilder({
   assessmentId, 
   initialData,
   initialQuestions,
+  isPublished = false,
   onCancel 
 }: AssessmentBuilderProps) {
   const [currentStep, setCurrentStep] = useState<Step>('details')
@@ -86,6 +89,7 @@ export function AssessmentBuilder({
     ...(creationMethod !== 'manual' && mode === 'create' ? [{ id: 'generation' as Step, title: 'AI Generation', description: 'Generate questions automatically', icon: <Wand2 className="w-4 h-4" /> }] : []),
     { id: 'questions', title: 'Questions', description: 'Create and manage questions' },
     { id: 'preview', title: 'Preview & Publish', description: mode === 'edit' ? 'Review and update assessment' : 'Review and save assessment', icon: <Eye className="w-4 h-4" /> },
+    ...(mode === 'edit' && isPublished ? [{ id: 'attempts' as Step, title: 'Attempts', description: 'View assessment attempts and results' }] : []),
   ]
 
   // Auto-advance to appropriate step based on creation method
@@ -493,6 +497,24 @@ export function AssessmentBuilder({
                 assessmentData={assessmentData}
                 questions={questions}
               />
+          </div>
+        )
+      
+      case 'attempts':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Assessment Attempts</h2>
+              <p className="text-muted-foreground mb-6">
+                View and analyze all attempts for this assessment.
+              </p>
+            </div>
+            {assessmentId && (
+              <AssessmentAttempts
+                assessmentId={assessmentId}
+                assessmentName={assessmentData.name}
+              />
+            )}
           </div>
         )
       

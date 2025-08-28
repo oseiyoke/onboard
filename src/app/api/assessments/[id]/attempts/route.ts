@@ -42,10 +42,10 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: { 
   }
   
   // Check retry limit
-  const existingAttempts = await assessmentService.getAttemptsByUser(user.id, id)
-  if (existingAttempts.length >= assessment.retry_limit) {
-    throw new Error('Maximum number of attempts reached')
-  }
+  // const existingAttempts = await assessmentService.getAttemptsByUser(user.id, id)
+  // if (existingAttempts.length >= assessment.retry_limit) {
+  //   throw new Error('Maximum number of attempts reached')
+  // }
   
   const attempt = await assessmentService.createAttempt(id, user.id, enrollmentId)
   

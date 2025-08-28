@@ -139,6 +139,7 @@ export default function EditAssessmentPage() {
         assessmentId={assessmentId}
         initialData={initialData}
         initialQuestions={initialQuestions}
+        isPublished={assessment.is_published}
         onCancel={() => router.push('/dashboard/assessments')}
       />
     </div>

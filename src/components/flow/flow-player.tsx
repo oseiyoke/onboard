@@ -634,14 +634,14 @@ function AssessmentItemRenderer({
 
   const handleAssessmentComplete = async (answers: Record<string, unknown>, timeSpent: number) => {
     try {
-      const response = await fetch(`/api/assessments/${assessmentId}/attempts/${attemptId}/submit`, {
+      const response = await fetch(`/api/assessments/attempts/${attemptId}/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           answers,
-          timeSpent
+          time_spent_seconds: timeSpent
         })
       })
 
@@ -654,7 +654,9 @@ function AssessmentItemRenderer({
       setShowPlayer(false)
       
       // Calculate score as percentage
-      const score = (result.attempt.score / result.attempt.total_points) * 100
+      const score = result.attempt.max_score && result.attempt.max_score > 0 
+        ? (result.attempt.score / result.attempt.max_score) * 100 
+        : 0
       const passed = score >= typedAssessment?.passing_score
       
       if (passed) {
@@ -745,15 +747,19 @@ function AssessmentItemRenderer({
             <div className="text-sm space-y-1">
               <div>
                 Score: <span className="font-medium">
-                  {Math.round((typedLastResult.score / typedLastResult.total_points) * 100)}%
+                  {typedLastResult.max_score && typedLastResult.max_score > 0 
+                    ? Math.round((typedLastResult.score / typedLastResult.max_score) * 100)
+                    : 0}%
                 </span>
               </div>
               <div className={`text-sm ${
-                (typedLastResult.score / typedLastResult.total_points) * 100 >= typedAssessment?.passing_score 
+                typedLastResult.max_score && typedLastResult.max_score > 0 && 
+                (typedLastResult.score / typedLastResult.max_score) * 100 >= typedAssessment?.passing_score 
                   ? 'text-green-600' 
                   : 'text-red-600'
               }`}>
-                {(typedLastResult.score / typedLastResult.total_points) * 100 >= typedAssessment?.passing_score 
+                {typedLastResult.max_score && typedLastResult.max_score > 0 && 
+                (typedLastResult.score / typedLastResult.max_score) * 100 >= typedAssessment?.passing_score 
                   ? 'Passed' 
                   : 'Failed'}
               </div>

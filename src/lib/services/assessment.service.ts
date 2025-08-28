@@ -109,6 +109,14 @@ export interface AssessmentAttempt {
   created_at: string
 }
 
+export interface AssessmentAttemptWithUser extends AssessmentAttempt {
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+}
+
 export interface AssessmentWithQuestions extends Assessment {
   questions: Question[]
 }
@@ -471,6 +479,58 @@ export class AssessmentService {
     }
 
     return data as AssessmentAttempt[]
+  }
+
+  async getAssessmentAttempts(assessmentId: string, options?: {
+    page?: number
+    limit?: number
+    userId?: string
+    passed?: boolean
+  }): Promise<{
+    attempts: AssessmentAttemptWithUser[]
+    total: number
+    page: number
+    limit: number
+  }> {
+    const { page = 1, limit = 50, userId, passed } = options || {}
+    const offset = (page - 1) * limit
+
+    const supabase = await createClient()
+    
+    let query = supabase
+      .from('onboard_assessment_attempts')
+      .select(`
+        *,
+        user:onboard_users(
+          id,
+          name,
+          email
+        )
+      `, { count: 'exact' })
+      .eq('assessment_id', assessmentId)
+      .order('created_at', { ascending: false })
+
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+
+    if (passed !== undefined) {
+      query = query.eq('is_passed', passed)
+    }
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1)
+
+    if (error) {
+      console.error('Assessment attempts fetch error:', error)
+      throw new Error('Failed to fetch assessment attempts')
+    }
+
+    return {
+      attempts: data as AssessmentAttemptWithUser[],
+      total: count || 0,
+      page,
+      limit,
+    }
   }
 
   private calculateScore(assessment: AssessmentWithQuestions, answers: Record<string, unknown>): {
