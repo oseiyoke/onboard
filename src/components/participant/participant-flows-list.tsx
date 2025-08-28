@@ -57,6 +57,7 @@ function FlowCard({ flowPreview }: { flowPreview: ParticipantFlowPreview }) {
           size="sm"
           onClick={handleLaunch}
           disabled={isLaunching}
+          className="w-full"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Review
@@ -69,6 +70,7 @@ function FlowCard({ flowPreview }: { flowPreview: ParticipantFlowPreview }) {
           size="sm"
           onClick={handleLaunch}
           disabled={isLaunching}
+          className="w-full"
         >
           <Play className="w-4 h-4 mr-2" />
           Continue
@@ -80,6 +82,7 @@ function FlowCard({ flowPreview }: { flowPreview: ParticipantFlowPreview }) {
         size="sm"
         onClick={handleLaunch}
         disabled={isLaunching}
+        className="w-full"
       >
         <Play className="w-4 h-4 mr-2" />
         {isLaunching ? 'Starting...' : 'Start'}
@@ -88,11 +91,11 @@ function FlowCard({ flowPreview }: { flowPreview: ParticipantFlowPreview }) {
   }
 
   return (
-    <Card className="transition-all hover:shadow-md">
+    <Card className="transition-all hover:shadow-md w-full max-w-full">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg">{flowPreview.flow.name}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1 flex-1 min-w-0">
+            <CardTitle className="text-lg truncate">{flowPreview.flow.name}</CardTitle>
             {flowPreview.flow.description && (
               <CardDescription className="line-clamp-2">
                 {flowPreview.flow.description}
@@ -117,16 +120,19 @@ function FlowCard({ flowPreview }: { flowPreview: ParticipantFlowPreview }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2">
           <Button 
             variant="ghost" 
             size="sm"
             disabled={!flowPreview.enrollment}
+            className="flex-1 sm:flex-none"
           >
             View Details
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-          {getActionButton(flowPreview)}
+          <div className="flex-1 sm:flex-none">
+            {getActionButton(flowPreview)}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -154,7 +160,7 @@ function EmptyState() {
 
 function LoadingSkeleton() {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {[...Array(3)].map((_, i) => (
         <Card key={i} className="animate-pulse">
           <CardHeader>
@@ -227,7 +233,7 @@ export function ParticipantFlowsList() {
             <Clock className="w-5 h-5" />
             In Progress ({inProgressFlows.length})
           </h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {inProgressFlows.map((flowPreview) => (
               <FlowCard key={flowPreview.flow.id} flowPreview={flowPreview} />
             ))}
@@ -242,7 +248,7 @@ export function ParticipantFlowsList() {
             <Play className="w-5 h-5" />
             Ready to Start ({notStartedFlows.length})
           </h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {notStartedFlows.map((flowPreview) => (
               <FlowCard key={flowPreview.flow.id} flowPreview={flowPreview} />
             ))}
@@ -257,7 +263,7 @@ export function ParticipantFlowsList() {
             <CheckCircle className="w-5 h-5" />
             Completed ({completedFlows.length})
           </h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {completedFlows.map((flowPreview) => (
               <FlowCard key={flowPreview.flow.id} flowPreview={flowPreview} />
             ))}

@@ -24,9 +24,9 @@ export function ParticipantDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-primary">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary">
           My Learning Journey
         </h1>
         <p className="text-muted-foreground">

@@ -31,7 +31,7 @@ export function FlowDetailsDialog({ enrollment, open, onOpenChange }: FlowDetail
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[80vh] overflow-y-auto mx-4 sm:mx-0">
         <DialogHeader>
           <DialogTitle className="text-xl">{enrollment.flow.name}</DialogTitle>
           {enrollment.flow.description && (

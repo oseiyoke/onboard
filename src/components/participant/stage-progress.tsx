@@ -29,15 +29,11 @@ interface StageProgressProps {
 
 function StageItemRow({ 
   item, 
-  stageId, 
-  enrollmentId, 
   isSubmitting,
   submittingItemId,
   onToggleComplete 
 }: {
   item: UserFlowProgress['stages'][0]['items'][0]
-  stageId: string
-  enrollmentId: string
   isSubmitting: boolean
   submittingItemId: string | null
   onToggleComplete: (itemId: string, isCompleted: boolean, score?: number) => void
@@ -110,13 +106,11 @@ function StageItemRow({
 
 function StageCard({ 
   stage, 
-  enrollmentId, 
   isSubmitting,
   submittingItemId,
   onToggleComplete 
 }: {
   stage: UserFlowProgress['stages'][0]
-  enrollmentId: string
   isSubmitting: boolean
   submittingItemId: string | null
   onToggleComplete: (itemId: string, isCompleted: boolean, score?: number) => void
@@ -192,8 +186,6 @@ function StageCard({
                   <StageItemRow
                     key={item.item_id}
                     item={item}
-                    stageId={stage.stage_id}
-                    enrollmentId={enrollmentId}
                     isSubmitting={isSubmitting}
                     submittingItemId={submittingItemId}
                     onToggleComplete={onToggleComplete}
@@ -280,7 +272,7 @@ function LoadingSkeleton() {
 export function StageProgress({ enrollmentId, onLaunchFlow }: StageProgressProps) {
   const { progress, loading, error } = useFlowProgress(enrollmentId)
   const { completeItem, isSubmitting, submittingItemId } = useProgressMutations(enrollmentId)
-  const stats = useProgressStats(progress)
+  const stats = useProgressStats(progress || null)
 
   const handleToggleComplete = async (itemId: string, isCompleted: boolean, score?: number) => {
     if (!isCompleted) {
@@ -314,7 +306,7 @@ export function StageProgress({ enrollmentId, onLaunchFlow }: StageProgressProps
       <ProgressOverview stats={stats} />
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         {onLaunchFlow && (
           <Button onClick={onLaunchFlow}>
             <Play className="w-4 h-4 mr-2" />
@@ -336,7 +328,6 @@ export function StageProgress({ enrollmentId, onLaunchFlow }: StageProgressProps
             <StageCard
               key={stage.stage_id}
               stage={stage}
-              enrollmentId={enrollmentId}
               isSubmitting={isSubmitting}
               submittingItemId={submittingItemId}
               onToggleComplete={handleToggleComplete}

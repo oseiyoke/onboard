@@ -1,7 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { DashboardSidebar } from '@/components/dashboard/sidebar'
-import { DashboardHeader } from '@/components/dashboard/header'
+import { ResponsiveDashboardLayout } from '@/components/dashboard/responsive-dashboard-layout'
 
 export default async function DashboardLayout({
   children,
@@ -33,12 +32,13 @@ export default async function DashboardLayout({
   const isMember = onboardUser.role === 'admin' || onboardUser.member || false
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardSidebar userRole={onboardUser.role} isMember={isMember} />
-      <div className="lg:pl-64">
-        <DashboardHeader />
-        <main className="p-6">{children}</main>
-      </div>
+    <div className="min-h-screen bg-background w-full overflow-x-hidden">
+      <ResponsiveDashboardLayout 
+        userRole={onboardUser.role}
+        isMember={isMember}
+      >
+        {children}
+      </ResponsiveDashboardLayout>
     </div>
   )
 }

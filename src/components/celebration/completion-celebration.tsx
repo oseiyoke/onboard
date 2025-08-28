@@ -72,7 +72,7 @@ export function CompletionCelebration({
         className="relative z-10 animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        <Card className="w-full max-w-md mx-4 overflow-hidden">
+        <Card className="w-full max-w-md mx-2 sm:mx-4 overflow-hidden">
           <div className="bg-gradient-to-br from-primary to-primary/80 p-8 text-primary-foreground text-center relative">
             <div className="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
               <Trophy className="w-10 h-10" />
@@ -113,7 +113,7 @@ export function CompletionCelebration({
                     View My Certificate
                   </Button>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button 
                       variant="outline" 
                       className="flex-1 gap-2"
