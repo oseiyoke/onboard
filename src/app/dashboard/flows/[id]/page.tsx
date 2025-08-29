@@ -10,7 +10,7 @@ interface PageProps {
 
 export default async function FlowViewPage({ params }: PageProps) {
   const { id: flowId } = await params
-  await getAuthenticatedUser() // Ensure user is authenticated
+  const user = await getAuthenticatedUser() // Ensure user is authenticated and get user data
   
   const flow = await flowService.getFlowById(flowId)
   
@@ -21,5 +21,5 @@ export default async function FlowViewPage({ params }: PageProps) {
   // Fetch stages for this flow
   const stages = await stageService.getStagesByFlowId(flowId)
   
-  return <FlowViewClient flow={flow} stages={stages || []} />
+  return <FlowViewClient flow={flow} stages={stages || []} userRole={user.role} />
 }

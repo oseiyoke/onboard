@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,28 +9,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   ArrowLeft, 
   Edit, 
-  Play, 
   Calendar,
   Clock,
   Users,
   FileText,
   ClipboardCheck,
-  Info,
-  Settings
+  Info
 } from 'lucide-react'
 import { Flow } from '@/lib/services/flow.service'
 import { StageWithItems } from '@/lib/services/stage.service'
+import { FlowParticipantsList } from '@/components/flow/participants/flow-participants-list'
 
 interface FlowViewClientProps {
   flow: Flow
   stages: StageWithItems[]
+  userRole: 'admin' | 'participant'
 }
 
-export function FlowViewClient({ flow, stages }: FlowViewClientProps) {
-  const router = useRouter()
+export function FlowViewClient({ flow, stages, userRole }: FlowViewClientProps) {
   const [selectedStageId, setSelectedStageId] = useState<string | null>(stages && stages.length > 0 ? stages[0].id : null)
 
   const selectedStage = stages.find(stage => stage.id === selectedStageId)
+  const isAdmin = userRole === 'admin'
   const totalItems = stages.reduce((acc, stage) => acc + (stage.items?.length || 0), 0)
 
   const getItemTypeIcon = (type: string) => {
@@ -92,9 +91,15 @@ export function FlowViewClient({ flow, stages }: FlowViewClientProps) {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid grid-cols-2 w-full max-w-md">
+              <TabsList className={`grid ${isAdmin ? 'grid-cols-3 max-w-lg' : 'grid-cols-2 max-w-md'} w-full`}>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="stages">Stages</TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger value="participants" className="gap-2">
+                    <Users className="w-4 h-4" />
+                    Participants
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="overview" className="mt-6">
@@ -231,6 +236,12 @@ export function FlowViewClient({ flow, stages }: FlowViewClientProps) {
                   ))}
                 </div>
               </TabsContent>
+
+              {isAdmin && (
+                <TabsContent value="participants" className="mt-6">
+                  <FlowParticipantsList flowId={flow.id} />
+                </TabsContent>
+              )}
             </Tabs>
           </div>
 
