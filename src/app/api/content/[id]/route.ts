@@ -10,7 +10,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: { p
   const content = await contentService.getContentById(id)
   
   if (!content) {
-    return createErrorResponse('Content not found', 404)
+    return createErrorResponse('Content not found', { status: 404 })
   }
   
   return createSuccessResponse(

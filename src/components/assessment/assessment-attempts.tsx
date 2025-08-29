@@ -353,7 +353,7 @@ export function AssessmentAttempts({ assessmentId, assessmentName }: AssessmentA
                   <TableRow key={attempt.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{attempt.user.name}</div>
+                        <div className="font-medium">{attempt.user.first_name}</div>
                         <div className="text-sm text-muted-foreground">{attempt.user.email}</div>
                       </div>
                     </TableCell>
@@ -383,7 +383,7 @@ export function AssessmentAttempts({ assessmentId, assessmentName }: AssessmentA
                           <DialogHeader>
                             <DialogTitle>Attempt Details</DialogTitle>
                             <DialogDescription>
-                              {attempt.user.name} - {formatDate(attempt.completed_at || attempt.started_at)}
+                              {attempt.user.first_name} - {formatDate(attempt.completed_at || attempt.started_at)}
                             </DialogDescription>
                           </DialogHeader>
                           <AttemptDetails attempt={attempt} questions={questions} />

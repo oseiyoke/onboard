@@ -3,9 +3,9 @@ import { requireAdmin } from '@/lib/auth/server'
 import { withErrorHandler, createSuccessResponse, ValidationError } from '@/lib/api/errors'
 import { createClient } from '@/utils/supabase/server'
 
-export const GET = withErrorHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = withErrorHandler(async (request: NextRequest, context: any) => {
   const admin = await requireAdmin(request)
-  const userId = params.id
+  const userId = context?.params?.id as string
 
   const supabase = await createClient()
 
@@ -46,14 +46,16 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: { p
   // Calculate progress for each enrollment
   const enrollmentsWithProgress = await Promise.all(
     (enrollments ?? []).map(async (enrollment) => {
-      // Get total items in flow
+      // Supabase join returns 'flow' as an array; pick first entry's id
+      const flowIdForCount = Array.isArray(enrollment.flow) ? enrollment.flow[0]?.id : (enrollment.flow as any)?.id
+
       const { data: stages } = await supabase
         .from('onboard_stages')
         .select(`
           id,
           items:onboard_stage_items(id)
         `)
-        .eq('flow_id', enrollment.flow.id)
+        .eq('flow_id', flowIdForCount)
 
       const totalItems = stages?.reduce((acc, stage) => acc + stage.items.length, 0) || 0
 

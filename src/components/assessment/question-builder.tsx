@@ -13,7 +13,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 
 interface Question {
   id: string
-  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay'
+  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay' | 'file_upload'
   question: string
   options: string[]
   correctAnswer: any
@@ -270,6 +270,7 @@ export function QuestionBuilder({ questions, onChange, onNext }: QuestionBuilder
                                     <SelectItem value="true_false">True/False</SelectItem>
                                     <SelectItem value="short_answer">Short Answer</SelectItem>
                                     <SelectItem value="essay">Essay</SelectItem>
+                                    <SelectItem value="file_upload">File Upload</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>

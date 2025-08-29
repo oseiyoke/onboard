@@ -115,9 +115,9 @@ export function ContentSelector({ selectedContentId, onSelectContent }: ContentS
                     <div className="flex items-center gap-2 mt-1">
                       {getSourceBadge(item.source)}
 
-                      {item.fileSize && (
+                      {item.file_size && (
                         <span className="text-xs text-muted-foreground">
-                          {formatFileSize(item.fileSize)}
+                          {formatFileSize(item.file_size)}
                         </span>
                       )}
 

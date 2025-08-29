@@ -208,6 +208,7 @@ export class FlowService {
     return this.createFlow(userId, {
       name: `${originalFlow.name} (Copy)`,
       description: originalFlow.description || undefined,
+      promote_to_member: originalFlow.promote_to_member,
     })
   }
 }

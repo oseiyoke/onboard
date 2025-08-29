@@ -21,7 +21,7 @@ type AnswerValue = string | string[] | boolean
 
 interface Question {
   id: string
-  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay'
+  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay' | 'file_upload'
   question: string
   options: string[]
   correctAnswer: AnswerValue
@@ -80,7 +80,7 @@ export function AssessmentPreview({ assessmentData, questions }: AssessmentPrevi
                     <span className="text-sm">{option}</span>
                     {/* Show correct answers in preview */}
                     {((question.type === 'multiple_choice' && option === question.correctAnswer) ||
-                      (question.type === 'multi_select' && question.correctAnswer?.includes(option))) && (
+                      (question.type === 'multi_select' && Array.isArray(question.correctAnswer) && question.correctAnswer.includes(option))) && (
                       <Badge variant="default" className="text-xs ml-2">Correct</Badge>
                     )}
                   </div>

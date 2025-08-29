@@ -22,7 +22,7 @@ import {
 
 interface Question {
   id: string
-  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay'
+  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay' | 'file_upload'
   question: string
   options: string[]
   explanation?: string
@@ -147,7 +147,7 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
       case 'multiple_choice':
         return (
           <RadioGroup
-            value={currentAnswer || ''}
+            value={typeof currentAnswer === 'string' ? currentAnswer : ''}
             onValueChange={(value) => handleAnswerChange(questionId, value)}
           >
             {question.options.map((option, index) => (
@@ -168,9 +168,9 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
               <div key={index} className="flex items-center space-x-2">
                 <Checkbox
                   id={`${questionId}-${index}`}
-                  checked={(currentAnswer || []).includes(option)}
+                  checked={Array.isArray(currentAnswer) ? currentAnswer.includes(option) : false}
                   onCheckedChange={(checked) => {
-                    const current = currentAnswer || []
+                    const current = Array.isArray(currentAnswer) ? currentAnswer : []
                     const updated = checked
                       ? [...current, option]
                       : current.filter((a: string) => a !== option)
@@ -206,7 +206,7 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
         return (
           <Input
             placeholder="Enter your answer..."
-            value={currentAnswer || ''}
+            value={typeof currentAnswer === 'string' ? currentAnswer : ''}
             onChange={(e) => handleAnswerChange(questionId, e.target.value)}
           />
         )
@@ -215,7 +215,7 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
         return (
           <Textarea
             placeholder="Enter your response..."
-            value={currentAnswer || ''}
+            value={typeof currentAnswer === 'string' ? currentAnswer : ''}
             onChange={(e) => handleAnswerChange(questionId, e.target.value)}
             rows={6}
           />

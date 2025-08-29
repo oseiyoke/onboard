@@ -3,14 +3,10 @@ import { requireAdmin } from '@/lib/auth/server'
 import { withErrorHandler, createSuccessResponse, ValidationError } from '@/lib/api/errors'
 import { createClient } from '@/utils/supabase/server'
 
-interface RouteParams {
-  params: { id: string }
-}
-
 // GET /api/flows/[id]/participants - Get all participants enrolled in a specific flow (admin only)
-export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
+export const GET = withErrorHandler(async (request: NextRequest, context: any) => {
   const admin = await requireAdmin(request)
-  const flowId = params.id
+  const flowId = context.params?.id as string
   const supabase = await createClient()
   
   // Verify the flow exists and belongs to admin's org

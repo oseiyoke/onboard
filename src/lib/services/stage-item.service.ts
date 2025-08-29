@@ -250,16 +250,30 @@ export class StageItemService {
   private async reorderItemsAfterDelete(stageId: string, deletedPosition: number): Promise<void> {
     const supabase = await createClient()
 
-    // Update positions of items that came after the deleted item
-    const { error } = await supabase
+    // Get items that come after the deleted position
+    const { data: itemsToShift, error: fetchError } = await supabase
       .from('onboard_stage_items')
-      .update({ position: supabase.raw('position - 1') })
+      .select('id, position')
       .eq('stage_id', stageId)
       .gt('position', deletedPosition)
 
-    if (error) {
-      console.warn('Stage item reorder warning:', error)
-      // Don't throw - deletion succeeded, reordering is less critical
+    if (fetchError) {
+      console.warn('Stage item reorder fetch warning:', fetchError)
+      return
+    }
+
+    if (!itemsToShift || itemsToShift.length === 0) return
+
+    // Decrement position for each item sequentially
+    for (const item of itemsToShift) {
+      const { error: updateErr } = await supabase
+        .from('onboard_stage_items')
+        .update({ position: item.position - 1 })
+        .eq('id', item.id)
+
+      if (updateErr) {
+        console.warn('Stage item reorder update warning:', updateErr)
+      }
     }
   }
 

@@ -105,7 +105,7 @@ export function AssessmentResults({
         (Array.isArray(question.correct_answer) && 
          Array.isArray(userAnswer) &&
          userAnswer.length === question.correct_answer.length &&
-         userAnswer.every((ans: AnswerValue) => question.correct_answer.includes(ans)))
+         userAnswer.every((ans) => (question.correct_answer as string[]).includes(ans as string)))
       
       return {
         id: question.id,

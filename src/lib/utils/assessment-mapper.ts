@@ -16,7 +16,7 @@ export interface AssessmentData {
 
 export interface Question {
   id: string
-  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay'
+  type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay' | 'file_upload'
   question: string
   options: string[]
   correctAnswer: any
@@ -55,8 +55,9 @@ export function uiAssessmentToApi(
 
   // Add generation source if not manual
   if (generationType !== 'manual') {
+    const mappedType: 'content' | 'prompt' = generationType === 'youtube' ? 'content' : generationType
     assessment.generation_source = {
-      type: generationType,
+      type: mappedType,
       ...(generationSource?.contentId && { content_id: generationSource.contentId }),
       ...(generationSource?.prompt && { prompt: generationSource.prompt })
     }

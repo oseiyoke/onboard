@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={updatePassword} className="space-y-4">
+          <form action={async (fd)=>{await updatePassword(fd)}} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password">New Password</Label>
               <Input

@@ -71,6 +71,11 @@ export class AssessmentGeneratorService {
       name: request.assessmentConfig.name,
       description: request.assessmentConfig.description || `AI-generated assessment from ${request.type}`,
       passing_score: request.assessmentConfig.passingScore || 70,
+      retry_limit: 3,
+      randomize_questions: false,
+      randomize_answers: true,
+      show_feedback: true,
+      show_correct_answers: true,
       generation_source: generationSource,
       settings: {
         ai_generated: true,

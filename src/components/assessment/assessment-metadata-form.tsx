@@ -27,7 +27,7 @@ interface AssessmentMetadataFormProps {
 }
 
 export function AssessmentMetadataForm({ data, onChange, onNext }: AssessmentMetadataFormProps) {
-  const handleChange = (field: keyof AssessmentData, value: string | number | boolean) => {
+  const handleChange = <K extends keyof AssessmentData>(field: K, value: AssessmentData[K]) => {
     onChange({ ...data, [field]: value })
   }
 

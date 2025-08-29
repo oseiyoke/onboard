@@ -17,11 +17,11 @@ export function dedupeRequest<T>(
   // Check if we already have a pending request
   const existingRequest = requestCache.get(key)
   if (existingRequest) {
-    return existingRequest
+    return existingRequest as Promise<T>
   }
 
   // Create new request
-  const request = requestFn().finally(() => {
+  const request = (requestFn() as Promise<T>).finally(() => {
     // Clean up after TTL
     setTimeout(() => {
       requestCache.delete(key)

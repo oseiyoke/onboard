@@ -8,7 +8,7 @@ const UpdateMemberSchema = z.object({
   member: z.boolean(),
 })
 
-export const PATCH = withErrorHandler(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const PATCH = withErrorHandler(async (request: NextRequest, { params }) => {
   const user = await requireAdmin(request)
   const userId = params.id
   

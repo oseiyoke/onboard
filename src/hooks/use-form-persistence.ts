@@ -21,7 +21,7 @@ export function useFormPersistence<T extends Record<string, unknown>>({
 }: UseFormPersistenceOptions<T>) {
   const [formData, setFormData] = useState<T>(defaultValues)
   const [isLoaded, setIsLoaded] = useState(false)
-  const debounceTimeoutRef = useRef<NodeJS.Timeout>()
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load data from storage on mount
   useEffect(() => {
@@ -75,7 +75,7 @@ export function useFormPersistence<T extends Record<string, unknown>>({
 
   // Update a specific field
   const updateField = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
-    updateFormData({ [field]: value } as Partial<T>)
+    updateFormData(prev => ({ ...prev, [field]: value }))
   }, [updateFormData])
 
   // Clear persisted data

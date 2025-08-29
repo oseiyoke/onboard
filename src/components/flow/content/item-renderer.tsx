@@ -9,16 +9,10 @@ import { CheckCircle, FileText, Brain, Info } from 'lucide-react'
 import { ContentViewer } from '@/components/content/content-viewer'
 import { AssessmentPlayer } from '@/components/assessment/assessment-player'
 import { toast } from 'sonner'
+import { StageItem } from '@/lib/services/stage.service'
 
 interface ItemRendererProps {
-  item: {
-    id: string
-    type: 'content' | 'assessment' | 'info'
-    title: string
-    body?: string
-    content_id?: string
-    assessment_id?: string
-  }
+  item: StageItem
   onComplete: (score?: number) => void
   isCompleted: boolean
   enrollmentId: string

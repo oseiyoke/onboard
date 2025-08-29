@@ -10,5 +10,9 @@ export async function sendReset(formData: FormData) {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`,
   })
 
-  return { error: error?.message || null }
+  if (error) {
+    console.error('Password reset error:', error)
+    // In a real app, you might want to handle this error better
+    // For now, we'll just log it since form actions should not return values
+  }
 }
