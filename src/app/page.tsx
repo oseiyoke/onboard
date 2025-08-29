@@ -8,21 +8,21 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Welcome to <span className="text-primary">Onboard</span>
+            Welcome to <span className="text-primary">Nigerian Dreamers</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Create powerful, customized onboarding experiences with AI-powered assessments 
-            and seamless progress tracking.
+            Transform your dreams into reality with structured learning journeys, 
+            assessments and seamless progress tracking designed for Nigerian entrepreneurs and innovators.
           </p>
           <div className="flex gap-4 justify-center">
             <Button asChild size="lg">
               <Link href="/login">
-                Get Started
+                Start Your Journey
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link href="/demo">
-                View Demo
+              <Link href="/onboard">
+                Learn More
               </Link>
             </Button>
           </div>
@@ -33,12 +33,12 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                  🎯
+                  🚀
                 </div>
-                Stage-Based Builder
+                Structured Learning Paths
               </CardTitle>
               <CardDescription>
-                Create structured onboarding flows with our intuitive stage-based interface
+                Follow carefully designed journeys that guide you from where you are to where you want to be
               </CardDescription>
             </CardHeader>
           </Card>
@@ -47,12 +47,12 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                  🤖
+                  🏆
                 </div>
-                Smart Assessments
+                Progress & Achievements
               </CardTitle>
               <CardDescription>
-                Create quizzes and assessments manually or generate them from your content using AI
+                Track your growth, earn certificates, and celebrate milestones as you advance through your journey
               </CardDescription>
             </CardHeader>
           </Card>
@@ -61,12 +61,12 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                  📊
+                  🤝
                 </div>
-                Real-time Analytics
+                Community Support
               </CardTitle>
               <CardDescription>
-                Track participant progress and engagement with comprehensive analytics
+                Connect with fellow Nigerian dreamers, share experiences, and grow together in a supportive community
               </CardDescription>
             </CardHeader>
           </Card>
@@ -75,16 +75,16 @@ export default function HomePage() {
         <div className="text-center">
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
-              <CardTitle>Multi-Tenant Architecture</CardTitle>
+              <CardTitle>Built for Nigerian Dreamers</CardTitle>
               <CardDescription>
-                Designed for organizations of all sizes with complete data isolation 
-                and customizable branding
+                Empowering the next generation of Nigerian entrepreneurs, innovators, and visionaries 
+                with structured learning paths and community support
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild>
                 <Link href="/login">
-                  Start Your Free Trial
+                  Join Nigerian Dreamers
                 </Link>
               </Button>
             </CardContent>

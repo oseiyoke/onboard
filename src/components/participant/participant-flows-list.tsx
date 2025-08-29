@@ -147,9 +147,9 @@ function EmptyState() {
           <Workflow className="w-8 h-8 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h3 className="font-semibold text-lg">No Flows Assigned</h3>
+          <h3 className="font-semibold text-lg">No Journeys Assigned</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
-            You haven&apos;t been enrolled in any onboarding flows yet. 
+            You haven&apos;t been enrolled in any dreamer journeys yet. 
             Contact your administrator if you believe this is an error.
           </p>
         </div>
@@ -205,7 +205,7 @@ export function ParticipantFlowsList() {
       <Card className="text-center py-12">
         <CardContent className="space-y-4">
           <div className="text-destructive text-sm">
-            Failed to load flows: {error.message}
+            Failed to load journeys: {error.message}
           </div>
           <Button onClick={() => refreshFlows()} variant="outline">
             Try Again

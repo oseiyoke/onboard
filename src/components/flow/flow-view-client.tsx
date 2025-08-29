@@ -97,7 +97,7 @@ export function FlowViewClient({ flow, stages, userRole }: FlowViewClientProps) 
                 {isAdmin && (
                   <TabsTrigger value="participants" className="gap-2">
                     <Users className="w-4 h-4" />
-                    Participants
+                    Dreamers
                   </TabsTrigger>
                 )}
               </TabsList>

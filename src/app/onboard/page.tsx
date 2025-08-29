@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
 import { Loader2, User } from 'lucide-react'
 
 export default function OnboardPage() {
@@ -14,7 +14,7 @@ export default function OnboardPage() {
   const [step, setStep] = useState<'check' | 'profile' | 'error'>('check')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [role, setRole] = useState<'admin' | 'participant'>('admin')
+  const role = 'participant' // All new users are participants/dreamers
   const [error, setError] = useState<string | null>(null)
   
   const router = useRouter()
@@ -160,9 +160,9 @@ export default function OnboardPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to Onboard!</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to Nigerian Dreamers!</CardTitle>
           <CardDescription>
-            Let&apos;s complete your profile and get you started
+            Let&apos;s complete your profile and start your journey
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -196,21 +196,7 @@ export default function OnboardPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role">Your Role</Label>
-                <Select value={role} onValueChange={(value: 'admin' | 'participant') => setRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="participant">Participant</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Administrators can create flows and manage content
-                </p>
-              </div>
+
 
               {error && (
                 <p className="text-sm text-red-500">{error}</p>

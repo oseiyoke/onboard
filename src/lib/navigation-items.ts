@@ -27,10 +27,10 @@ export const navigationItems: NavItem[] = [
     roles: ['admin'],
   },
   {
-    name: 'Flow Builder',
+    name: 'Journey Builder',
     href: '/dashboard/flows',
     icon: Workflow,
-    shortName: 'Flows',
+    shortName: 'Journeys',
     roles: ['admin'],
   },
   {
@@ -48,7 +48,7 @@ export const navigationItems: NavItem[] = [
     roles: ['admin'],
   },
   {
-    name: 'Users',
+    name: 'Dreamers',
     href: '/dashboard/users',
     icon: Users,
     shortName: 'Users',

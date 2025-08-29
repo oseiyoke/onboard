@@ -1,10 +1,10 @@
-# Onboard - Community Onboarding Platform
+# Nigerian Dreamers - Journey Platform
 
 <div align="center">
 
-![Onboard Logo](https://img.shields.io/badge/Onboard-Community%20Platform-purple?style=for-the-badge)
+![Nigerian Dreamers Logo](https://img.shields.io/badge/Nigerian%20Dreamers-Journey%20Platform-purple?style=for-the-badge)
 
-**Transform how your community welcomes and trains new members with structured, AI-powered onboarding flows.**
+**Transform your dreams into reality with structured learning journeys and AI-powered assessments designed for Nigerian Dreamers.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
@@ -17,16 +17,16 @@
 
 ---
 
-## 🌟 What is Onboard?
+## 🌟 What is Nigerian Dreamers Platform?
 
-Onboard is an open-source, multi-tenant platform designed specifically for **communities, organizations, and educational institutions** who want to create structured onboarding experiences for their members. Before granting full access to community resources, new members progress through customizable stages that may include:
+Nigerian Dreamers is a customized learning journey platform designed specifically for the **Nigerian Dreamers community**. New dreamers progress through customizable journey stages that include:
 
 - **Content Consumption** - Videos, documents, presentations
 - **Assessments** - AI-generated or manual quizzes and evaluations
 - **Information Sections** - Important announcements and guidelines
 - **Progress Tracking** - Real-time monitoring of member advancement
 
-Perfect for **startup communities**, **professional organizations**, **educational institutions**, **non-profits**, **developer communities**, and any group that needs systematic member onboarding.
+Perfect for **Nigerian Dreamers** - empowering Nigerian entrepreneurs, innovators, and visionaries to achieve their dreams through structured learning and community support.
 
 ## 🎯 Use Cases
 

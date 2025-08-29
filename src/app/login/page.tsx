@@ -64,9 +64,9 @@ export default function LoginPage() {
         {isLogin ? (
           <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold">Welcome to Onboard</CardTitle>
+              <CardTitle className="text-2xl font-bold">Welcome to Nigerian Dreamers</CardTitle>
               <CardDescription>
-                Sign in to access your onboarding platform
+                Sign in to access your journey platform
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -130,7 +130,7 @@ export default function LoginPage() {
             <CardHeader className="text-center">
               <CardTitle className="text-xl font-bold">Create Account</CardTitle>
               <CardDescription>
-                New to Onboard? Sign up to get started
+                New to Nigerian Dreamers? Sign up to start your journey
               </CardDescription>
             </CardHeader>
             <CardContent>

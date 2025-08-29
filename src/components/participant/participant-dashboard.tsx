@@ -27,10 +27,10 @@ export function ParticipantDashboard() {
     <div className="space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-          My Learning Journey
+          My Dreamer Journey
         </h1>
         <p className="text-muted-foreground">
-          Track your progress and continue your onboarding flows
+          Track your progress and continue your dreamer journeys
         </p>
       </div>
 

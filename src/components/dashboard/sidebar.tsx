@@ -29,9 +29,9 @@ export function DashboardSidebar({ userRole, isMember }: DashboardSidebarProps) 
       <div className="flex h-16 items-center px-6 border-b border-border">
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">O</span>
+            <span className="text-primary-foreground font-bold text-sm">ND</span>
           </div>
-          <span className="font-semibold text-lg">Onboard</span>
+          <span className="font-semibold text-lg">Nigerian Dreamers</span>
         </Link>
       </div>
       

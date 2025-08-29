@@ -30,7 +30,7 @@ async function getDashboardStats() {
     totalFlows,
     activeFlows,
     draftFlows: totalFlows - activeFlows,
-    // TODO: Implement real participant stats when we have the data
+    // TODO: Implement real dreamer stats when we have the data
     activeParticipants: 0,
     completionRate: 0,
     avgTimeToComplete: 'N/A'
@@ -42,7 +42,7 @@ function DashboardStatsCards({ stats }: { stats: Awaited<ReturnType<typeof getDa
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Flows</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Journeys</CardTitle>
           <Workflow className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -55,13 +55,13 @@ function DashboardStatsCards({ stats }: { stats: Awaited<ReturnType<typeof getDa
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Participants</CardTitle>
+          <CardTitle className="text-sm font-medium">Active Dreamers</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.activeParticipants}</div>
           <p className="text-xs text-muted-foreground">
-            Across all flows
+            Across all journeys
           </p>
         </CardContent>
       </Card>
@@ -79,18 +79,7 @@ function DashboardStatsCards({ stats }: { stats: Awaited<ReturnType<typeof getDa
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Avg. Completion Time</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.avgTimeToComplete}</div>
-          <p className="text-xs text-muted-foreground">
-            Average time to complete
-          </p>
-        </CardContent>
-      </Card>
+     
     </div>
   )
 }
@@ -181,24 +170,7 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                Analytics
-              </CardTitle>
-              <CardDescription>
-                Track performance and engagement
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild variant="outline" className="w-full">
-                <Link href="/dashboard/analytics">
-                  View Analytics
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          
         </div>
       </div>
     )

@@ -26,7 +26,7 @@ export function CreateFlowForm() {
     const description = typeof descriptionRaw === 'string' ? descriptionRaw.trim() : undefined
     
     if (!name.trim()) {
-      setError('Flow name is required')
+              setError('Journey name is required')
       return
     }
 
@@ -70,15 +70,15 @@ export function CreateFlowForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Flow Details</CardTitle>
+        <CardTitle>Journey Details</CardTitle>
         <CardDescription>
-          Provide a name and description for your new onboarding flow
+          Provide a name and description for your new dreamer journey
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Flow Name *</Label>
+            <Label htmlFor="name">Journey Name *</Label>
             <Input
               id="name"
               name="name"
@@ -103,7 +103,7 @@ export function CreateFlowForm() {
               <div className="space-y-1">
                 <Label htmlFor="promote-to-member">Promote to Member</Label>
                 <p className="text-sm text-muted-foreground">
-                  When enabled, participants who complete this flow will be promoted to member status
+                  When enabled, dreamers who complete this journey will be promoted to member status
                 </p>
               </div>
               <Switch
@@ -126,7 +126,7 @@ export function CreateFlowForm() {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              {loading ? 'Creating...' : 'Create Flow'}
+              {loading ? 'Creating...' : 'Create Journey'}
             </Button>
             <Button variant="outline" asChild disabled={loading}>
               <Link href="/dashboard/flows">

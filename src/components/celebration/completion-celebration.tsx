@@ -79,9 +79,9 @@ export function CompletionCelebration({
             </div>
             
             <div>
-              <h2 className="text-2xl font-bold mb-2">Congratulations! 🎉</h2>
+              <h2 className="text-2xl font-bold mb-2">Congratulations, Dreamer! 🎉</h2>
               <p className="text-primary-foreground/80">
-                You&apos;ve successfully completed
+                You&apos;ve successfully completed your journey
               </p>
               <p className="font-semibold text-lg mt-1">
                 &quot;{flowName}&quot;
@@ -97,7 +97,7 @@ export function CompletionCelebration({
                 <div className="text-center space-y-2">
                   <div className="flex items-center justify-center gap-2 text-green-600">
                     <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">Flow Complete!</span>
+                    <span className="font-medium">Journey Complete!</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Your certificate is now available for download
@@ -145,7 +145,7 @@ export function CompletionCelebration({
                     onClick={onDismiss}
                     className="w-full text-muted-foreground"
                   >
-                    Continue Learning
+                    Continue Your Journey
                   </Button>
                 </div>
           </CardContent>

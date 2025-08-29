@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Onboard - Multi-Tenant Onboarding Platform",
-  description: "Create customized onboarding flows with AI-powered assessments",
+  title: "Nigerian Dreamers - Journey Platform",
+  description: "Transform your dreams into reality with structured learning journeys and assessments",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
