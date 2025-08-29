@@ -28,11 +28,13 @@ interface ItemRendererProps {
 function ContentItemRenderer({ 
   contentId, 
   onComplete, 
-  isCompleted 
+  isCompleted,
+  isSaving 
 }: { 
   contentId: string
   onComplete: (score?: number) => void
-  isCompleted: boolean 
+  isCompleted: boolean,
+  isSaving: boolean
 }) {
   const [content, setContent] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
@@ -86,11 +88,11 @@ function ContentItemRenderer({
         <Separator className="my-4" />
         <div className="flex justify-end">
           {!isCompleted ? (
-            <Button onClick={() => onComplete()} disabled={loading}>
-              {loading ? (
+            <Button onClick={() => onComplete()} disabled={loading || isSaving}>
+              {loading || isSaving ? (
                 <>
                   <span className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full" />
-                  Saving...
+                  Loading...
                 </>
               ) : 'Mark as Complete'}
             </Button>
@@ -371,6 +373,7 @@ export function ItemRenderer({ item, onComplete, isCompleted, enrollmentId }: It
         contentId={item.content_id}
         onComplete={handleMarkComplete}
         isCompleted={isCompleted}
+        isSaving={buttonLoading}
       />
     )
   }
