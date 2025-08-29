@@ -108,7 +108,7 @@ export function AIGenerationForm({ creationMethod, assessmentData, onGenerate, i
                 onChange={(e) => setYoutubeUrl(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                We'll extract the transcript and generate questions from the video content
+                We&apos;ll extract the transcript and generate questions from the video content
               </p>
             </div>
           )}
@@ -157,7 +157,7 @@ export function AIGenerationForm({ creationMethod, assessmentData, onGenerate, i
 
               <div className="space-y-2">
                 <Label htmlFor="difficulty">Difficulty Level</Label>
-                <Select value={difficulty} onValueChange={(v: any) => setDifficulty(v)}>
+                <Select value={difficulty} onValueChange={(v: 'easy' | 'medium' | 'hard') => setDifficulty(v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

@@ -16,6 +16,15 @@ export interface ContentItem {
   created_by: string
 }
 
+interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
 interface UseContentParams {
   page?: number
   limit?: number
@@ -53,7 +62,7 @@ export function useContent(params: UseContentParams = {}) {
       if (!res.ok) {
         throw new Error('Failed to fetch content')
       }
-      return res.json() as Promise<{ data: ContentItem[]; pagination: any }>
+      return res.json() as Promise<{ data: ContentItem[]; pagination: PaginationInfo }>
     },
   })
 }

@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 
 interface LinkUploadProps {
-  onUploadComplete?: (content: any) => void
+  onUploadComplete?: (content: MetadataResponse) => void
 }
 
 interface MetadataResponse {

@@ -41,16 +41,18 @@ interface Assessment {
   showCorrectAnswers: boolean
 }
 
+type AnswerValue = string | string[] | boolean
+
 interface AssessmentPlayerProps {
   assessment: Assessment
   attemptId: string
-  onComplete: (answers: Record<string, any>, timeSpent: number) => void
+  onComplete: (answers: Record<string, AnswerValue>, timeSpent: number) => void
   onCancel?: () => void
 }
 
 export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }: AssessmentPlayerProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, any>>({})
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
   const [startTime] = useState(Date.now())
   const [timeLeft, setTimeLeft] = useState<number | null>(
     assessment.timeLimitSeconds ? assessment.timeLimitSeconds : null
@@ -99,7 +101,7 @@ export function AssessmentPlayer({ assessment, attemptId, onComplete, onCancel }
     )
   }
 
-  const handleAnswerChange = (questionId: string, answer: any) => {
+  const handleAnswerChange = (questionId: string, answer: AnswerValue) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: answer

@@ -16,6 +16,8 @@ import {
   RefreshCw
 } from 'lucide-react'
 
+type AnswerValue = string | string[] | boolean
+
 interface AttemptResult {
   id: string
   userId: string
@@ -26,7 +28,7 @@ interface AttemptResult {
   percentageScore: number
   isPassed: boolean
   timeSpent: number
-  answers: Record<string, any>
+  answers: Record<string, AnswerValue>
   startedAt: string
   completedAt?: string
 }
@@ -35,18 +37,26 @@ interface QuestionResult {
   id: string
   question: string
   type: string
-  correctAnswer: any
-  userAnswer: any
+  correctAnswer: AnswerValue
+  userAnswer: AnswerValue
   isCorrect: boolean
   points: number
   earnedPoints: number
+}
+
+interface Question {
+  id: string
+  question: string
+  type: string
+  correct_answer: AnswerValue
+  points: number
 }
 
 interface AssessmentResultsProps {
   assessmentId: string
   assessmentName: string
   attempts: AttemptResult[]
-  questions: any[]
+  questions: Question[]
   onRetakeAllow?: (attemptId: string) => void
 }
 
@@ -95,7 +105,7 @@ export function AssessmentResults({
         (Array.isArray(question.correct_answer) && 
          Array.isArray(userAnswer) &&
          userAnswer.length === question.correct_answer.length &&
-         userAnswer.every((ans: any) => question.correct_answer.includes(ans)))
+         userAnswer.every((ans: AnswerValue) => question.correct_answer.includes(ans)))
       
       return {
         id: question.id,

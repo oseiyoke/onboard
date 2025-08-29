@@ -17,12 +17,14 @@ interface AssessmentData {
   showCorrectAnswers: boolean
 }
 
+type AnswerValue = string | string[] | boolean
+
 interface Question {
   id: string
   type: 'multiple_choice' | 'multi_select' | 'true_false' | 'short_answer' | 'essay'
   question: string
   options: string[]
-  correctAnswer: any
+  correctAnswer: AnswerValue
   explanation: string
   points: number
   position: number

@@ -11,7 +11,7 @@ interface UseFormPersistenceOptions<T> {
   deserialize?: (data: string) => T
 }
 
-export function useFormPersistence<T extends Record<string, any>>({
+export function useFormPersistence<T extends Record<string, unknown>>({
   key,
   defaultValues,
   debounceMs = 1000,

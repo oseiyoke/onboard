@@ -4,7 +4,7 @@
  */
 
 // Client-side request cache
-const requestCache = new Map<string, Promise<any>>()
+const requestCache = new Map<string, Promise<unknown>>()
 
 /**
  * Deduplicate API requests on the client side
@@ -37,7 +37,7 @@ export function dedupeRequest<T>(
  */
 export function createCacheKey(
   endpoint: string,
-  params?: Record<string, any>
+  params?: Record<string, unknown>
 ): string {
   if (!params) return endpoint
   

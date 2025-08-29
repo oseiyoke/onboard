@@ -149,7 +149,7 @@ function EmptyState() {
         <div className="space-y-2">
           <h3 className="font-semibold text-lg">No Flows Assigned</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
-            You haven't been enrolled in any onboarding flows yet. 
+            You haven&apos;t been enrolled in any onboarding flows yet. 
             Contact your administrator if you believe this is an error.
           </p>
         </div>
