@@ -80,12 +80,6 @@ export function FlowViewClient({ flow, stages }: FlowViewClientProps) {
                   Edit Flow
                 </Button>
               </Link>
-              <Link href={`/dashboard/learn/flows/${flow.id}`}>
-                <Button className="gap-2">
-                  <Play className="h-4 w-4" />
-                  Start Learning
-                </Button>
-              </Link>
             </div>
           </div>
         </div>

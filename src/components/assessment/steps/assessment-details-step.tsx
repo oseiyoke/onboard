@@ -63,10 +63,9 @@ export function AssessmentDetailsStep({
               <Input
                 id="passing-score"
                 type="number"
-                min="0"
                 max="100"
-                value={data.passingScore}
-                onChange={(e) => updateField('passingScore', parseInt(e.target.value) || 70)}
+                value={data.passingScore || ''}
+                onChange={(e) => updateField('passingScore', e.target.value === '' ? 0 : Number(e.target.value))}
               />
             </div>
 
@@ -76,8 +75,8 @@ export function AssessmentDetailsStep({
                 id="retry-limit"
                 type="number"
                 min="1"
-                value={data.retryLimit}
-                onChange={(e) => updateField('retryLimit', parseInt(e.target.value) || 3)}
+                value={data.retryLimit || ''}
+                onChange={(e) => updateField('retryLimit', e.target.value === '' ? 0 : Number(e.target.value))}
               />
             </div>
           </div>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ArrowLeft, Wand2, FileText, Youtube, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { AssessmentBuilder } from '@/components/assessment/assessment-builder'
 import Link from 'next/link'
 
@@ -74,11 +75,13 @@ export default function NewAssessmentPage() {
           </div>
 
           <div
-            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-emerald-50/50 transition-colors"
-            onClick={() => setCreationMethod('content')}
+            className="relative p-6 rounded-lg border bg-card opacity-60 cursor-not-allowed transition-colors"
           >
+            <Badge variant="secondary" className="absolute top-3 right-3 text-xs">
+              Coming Soon
+            </Badge>
             <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center group-hover:bg-emerald-200/70 transition-colors">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
                 <FileText className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
@@ -91,11 +94,13 @@ export default function NewAssessmentPage() {
           </div>
 
           <div
-            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-red-50/50 transition-colors"
-            onClick={() => setCreationMethod('youtube')}
+            className="relative p-6 rounded-lg border bg-card opacity-60 cursor-not-allowed transition-colors"
           >
+            <Badge variant="secondary" className="absolute top-3 right-3 text-xs">
+              Coming Soon
+            </Badge>
             <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center group-hover:bg-red-200/70 transition-colors">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <Youtube className="w-5 h-5 text-red-600" />
               </div>
               <div>
@@ -108,11 +113,13 @@ export default function NewAssessmentPage() {
           </div>
 
           <div
-            className="group cursor-pointer p-6 rounded-lg border bg-card hover:bg-blue-50/50 transition-colors"
-            onClick={() => setCreationMethod('prompt')}
+            className="relative p-6 rounded-lg border bg-card opacity-60 cursor-not-allowed transition-colors"
           >
+            <Badge variant="secondary" className="absolute top-3 right-3 text-xs">
+              Coming Soon
+            </Badge>
             <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200/70 transition-colors">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <MessageSquare className="w-5 h-5 text-blue-600" />
               </div>
               <div>

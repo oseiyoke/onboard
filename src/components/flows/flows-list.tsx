@@ -366,12 +366,6 @@ export function FlowsList({ initialFlows, pagination, searchParams }: FlowsListP
                             Edit
                           </Link>
                         </Button>
-                        <Button asChild variant="outline" size="sm" className="flex-1">
-                          <Link href={`/dashboard/flows/${flow.id}/preview`}>
-                            <Play className="w-3 h-3 mr-1" />
-                            Preview
-                          </Link>
-                        </Button>
                       </div>
                     </div>
                   </CardContent>

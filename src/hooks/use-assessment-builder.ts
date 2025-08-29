@@ -222,14 +222,13 @@ export function useAssessmentBuilder({
 
   // Validation
   const validateStep = useCallback((stepId: string): boolean | string => {
+    console.log("validateStep", stepId)
     switch (stepId) {
       case 'details':
         if (!assessmentData.name.trim()) {
           return 'Assessment name is required'
         }
-        if (!assessmentData.description.trim()) {
-          return 'Assessment description is required'
-        }
+        console.log("assessmentData.name", assessmentData.name)
         return true
         
       case 'questions':

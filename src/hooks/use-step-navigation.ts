@@ -87,8 +87,8 @@ export function useStepNavigation({
 
   const canGoNext = useCallback((): boolean => {
     if (isLastStep) return false
-    return isStepValid(currentStepId) && isStepAccessible(steps[currentIndex + 1]?.id)
-  }, [isLastStep, isStepValid, currentStepId, isStepAccessible, steps, currentIndex])
+    return isStepValid(currentStepId)
+  }, [isLastStep, isStepValid, currentStepId])
 
   const canGoBack = useCallback((): boolean => {
     return !isFirstStep

@@ -194,11 +194,6 @@ export function StagePreview({ flow, stages }: StagePreviewProps) {
           </div>
         </div>
 
-        {/* Preview Action */}
-        <Button className="gap-2">
-          <Play className="w-4 h-4" />
-          Test Flow
-        </Button>
       </div>
 
       {/* Stages Flow */}

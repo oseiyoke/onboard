@@ -15,9 +15,6 @@ export default function NewFlowPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold">Create New Flow</h1>
-          <p className="text-muted-foreground">
-            Set up the basic information for your onboarding flow
-          </p>
         </div>
       </div>
 
